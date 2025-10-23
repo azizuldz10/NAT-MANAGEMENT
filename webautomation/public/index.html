@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONT WiFi Extractor - Web UI</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📡 ONT WiFi Extractor</h1>
+            <p class="subtitle">Extract WiFi credentials from ONT devices - Universal Auto-Detection</p>
+        </header>
+
+        <main>
+            <!-- Input Form Section -->
+            <section class="input-section">
+                <h2>🔧 Configuration</h2>
+
+                <form id="extractionForm">
+                    <div class="form-group">
+                        <label for="ontUrl">ONT URL <span class="required">*</span></label>
+                        <input
+                            type="text"
+                            id="ontUrl"
+                            name="ontUrl"
+                            placeholder="http://192.168.1.1/ atau http://tunnel3.ebilling.id:15634/"
+                            required
+                        >
+                        <small>Masukkan URL lengkap ONT device (termasuk http://)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="useCustomCredentials">
+                            Gunakan kredensial khusus (opsional)
+                        </label>
+                    </div>
+
+                    <div id="credentialsSection" class="credentials-section" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    name="username"
+                                    placeholder="admin"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    placeholder="password"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="debugMode">
+                            Debug Mode (tampilkan browser & save screenshots)
+                        </label>
+                    </div>
+
+                    <button type="submit" id="extractBtn" class="btn btn-primary">
+                        🚀 Start Extraction
+                    </button>
+                </form>
+            </section>
+
+            <!-- Status Section -->
+            <section class="status-section" id="statusSection" style="display: none;">
+                <h2>📊 Status</h2>
+                <div class="status-indicator">
+                    <div class="spinner"></div>
+                    <p id="statusText">Initializing...</p>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section class="logs-section" id="logsSection" style="display: none;">
+                <h2>📋 Logs</h2>
+                <div class="logs-container" id="logsContainer"></div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <h2>✅ Hasil Extraction</h2>
+                <div class="result-card">
+                    <div class="result-row">
+                        <span class="label">Model ONT:</span>
+                        <span class="value" id="resultModel">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="label">SSID:</span>
+                        <span class="value highlight" id="resultSSID">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="label">Password WiFi:</span>
+                        <span class="value highlight" id="resultPassword">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="label">Security:</span>
+                        <span class="value" id="resultSecurity">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="label">Encryption:</span>
+                        <span class="value" id="resultEncryption">-</span>
+                    </div>
+                    <div class="result-row" id="credentialsRow" style="display: none;">
+                        <span class="label">Login Berhasil:</span>
+                        <span class="value" id="resultCredentials">-</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="copyBtn">📋 Copy Password</button>
+                    <button class="btn btn-secondary" id="newExtractionBtn">🔄 Extraction Baru</button>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <h2>❌ Error</h2>
+                <div class="error-card">
+                    <p id="errorMessage">-</p>
+                </div>
+                <button class="btn btn-secondary" id="retryBtn">🔄 Coba Lagi</button>
+            </section>
+
+            <!-- Info Section -->
+            <section class="info-section">
+                <h3>ℹ️ Informasi</h3>
+                <div class="info-card">
+                    <h4>Supported Models:</h4>
+                    <ul>
+                        <li>✓ Fiberhome GM220-S</li>
+                        <li>✓ AccesGo / OLD_MODEL</li>
+                        <li>✓ ZTE ZXHN F450</li>
+                        <li>✓ ZTE ZXHN F477V2</li>
+                    </ul>
+
+                    <h4>Auto-Credentials:</h4>
+                    <p>Jika tidak menggunakan kredensial khusus, sistem akan otomatis mencoba kredensial umum untuk setiap model ONT:</p>
+                    <ul>
+                        <li><strong>ZTE:</strong> admin/suportadmin, admin/admin, user/user</li>
+                        <li><strong>Fiberhome:</strong> admin/admin, telecomadmin/admintelecom</li>
+                        <li><strong>Huawei:</strong> telecomadmin/admintelecom, root/admin</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>ONT WiFi Extractor v2.1.0 | Powered by Playwright</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{{define "sidebar"}}
+<nav class="sidebar" id="sidebar" role="navigation" aria-label="Main sidebar">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+        <a href="/" class="sidebar-brand" aria-label="NAT Management Home">
+            <img src="/image/logo.png" alt="NAT Management Logo" class="sidebar-brand-logo" width="28" height="28">
+            <span class="sidebar-brand-text">NAT Management</span>
+        </a>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar-nav">
+        <!-- Main Navigation -->
+        <div class="nav-group">
+            <div class="nav-group-title">Main Menu</div>
+            <div class="nav-item">
+                <a class="nav-link active" href="/">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="nav-link-text">NAT Management</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" href="/pppoe">
+                    <i class="fas fa-search"></i>
+                    <span class="nav-link-text">PPPoE Checker</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Admin Navigation -->
+        <div class="nav-group">
+            <div class="nav-group-title">Administration</div>
+            <div class="nav-item">
+                <a class="nav-link" href="/routers" id="routerManagementLink">
+                    <i class="fas fa-server"></i>
+                    <span class="nav-link-text">Router Management</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" href="/users" id="userManagementLink">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-link-text">User Management</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" href="/logs" id="activityLogsLink">
+                    <i class="fas fa-history"></i>
+                    <span class="nav-link-text">Activity Logs</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Utilities -->
+        <div class="nav-group">
+            <div class="nav-group-title">Utilities</div>
+            <div class="nav-item">
+                <a class="nav-link" href="#" onclick="refreshData()">
+                    <i class="fas fa-sync-alt" id="refreshIconSidebar"></i>
+                    <span class="nav-link-text">Refresh Data</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Information -->
+    <div class="sidebar-user">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+                <p class="user-name" id="currentUserSidebar">Loading...</p>
+                <p class="user-role" id="userRoleSidebar">Loading...</p>
+            </div>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link" href="#" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="nav-link-text">Logout</span>
+            </a>
+        </div>
+    </div>
+</nav>
+{{end}}

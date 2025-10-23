@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_click",
+      "Read(//c/Users/MAKAROV/Documents/tools/NAT/nat-management-appV3.1/nat-management-app/**)",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_handle_dialog",
+      "Bash(python ont_wifi_extractor.py http://tunnel3.ebilling.id:20131/ admin admin --debug)",
+      "Bash(npx playwright install chromium)",
+      "Bash(node ont-wifi-extractor.js http://tunnel3.ebilling.id:20131/ admin admin)",
+      "Bash(node ont-wifi-extractor.js http://tunnel3.ebilling.id:20131/ admin admin --debug)",
+      "Bash(node ont-wifi-extractor.js http://tunnel3.ebilling.id:19701/ admin admin --debug)",
+      "mcp__playwright__browser_type",
+      "Bash(node ont-wifi-extractor.js http://tunnel3.ebilling.id:15634/ admin admin --debug)",
+      "Bash(node zte-f450-extractor.js http://tunnel3.ebilling.id:15634/ admin suportadmin --debug)",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_close",
+      "Bash(node zte-f477v2-extractor.js http://tunnel3.ebilling.id:15634/ admin suportadmin --debug)",
+      "Bash(node ont-extractor-launcher.js http://tunnel3.ebilling.id:15634/ --debug)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

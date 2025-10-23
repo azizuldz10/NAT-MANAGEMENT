@@ -1,0 +1,463 @@
+/* Mobile UX Enhancements Styles */
+
+/* Pull-to-Refresh Indicator */
+.pull-to-refresh-indicator {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: white;
+    border-radius: 0 0 20px 20px;
+    padding: 1rem 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pull-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    transition: transform 0.3s ease;
+}
+
+.pull-text {
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.pull-to-refresh-indicator.ready .pull-icon {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.pull-to-refresh-indicator.refreshing .pull-icon {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+/* Floating Action Button (FAB) */
+.mobile-fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+}
+
+.fab-main {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.fab-main:active {
+    transform: scale(0.9);
+}
+
+.mobile-fab.open .fab-main {
+    transform: rotate(90deg);
+}
+
+.fab-menu {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform: translateY(20px);
+}
+
+.mobile-fab.open .fab-menu {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+}
+
+.fab-action {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    transform: scale(0);
+}
+
+.mobile-fab.open .fab-action {
+    transform: scale(1);
+}
+
+.mobile-fab.open .fab-action:nth-child(1) {
+    transition-delay: 0.05s;
+}
+
+.mobile-fab.open .fab-action:nth-child(2) {
+    transition-delay: 0.1s;
+}
+
+.mobile-fab.open .fab-action:nth-child(3) {
+    transition-delay: 0.15s;
+}
+
+.mobile-fab.open .fab-action:nth-child(4) {
+    transition-delay: 0.2s;
+}
+
+.fab-action:active {
+    transform: scale(0.9);
+}
+
+.fab-action:hover {
+    background: #667eea;
+    color: white;
+}
+
+/* Mobile Quick Menu */
+.mobile-quick-menu {
+    display: none;
+    gap: 0.5rem;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+@media (max-width: 768px) {
+    .mobile-quick-menu {
+        display: flex;
+    }
+}
+
+.mobile-menu-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #e2e8f0;
+    color: #4a5568;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-menu-btn:active {
+    transform: scale(0.9);
+    background: #f7fafc;
+}
+
+/* Table Scroll Hint */
+.table-scroll-hint {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+}
+
+.table-scroll-hint i {
+    margin-right: 0.25rem;
+}
+
+/* Touch Optimizations */
+.touch-optimized * {
+    -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+    -webkit-touch-callout: none;
+}
+
+.touch-optimized button,
+.touch-optimized a,
+.touch-optimized .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem;
+}
+
+/* Smooth Scrolling */
+@media (max-width: 768px) {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Swipe Indicators */
+.swipe-indicator {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 60px;
+    background: rgba(102, 126, 234, 0.8);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 9999;
+}
+
+.swipe-indicator.left {
+    left: 20px;
+}
+
+.swipe-indicator.right {
+    right: 20px;
+}
+
+.swipe-indicator.active {
+    opacity: 1;
+}
+
+/* Mobile Card Improvements */
+@media (max-width: 768px) {
+    .card {
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .card-header {
+        padding: 0.875rem 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    /* Optimize stats cards */
+    .stats-card {
+        padding: 1rem;
+        min-height: auto;
+    }
+
+    .stats-card h4 {
+        font-size: 1.5rem;
+    }
+
+    .stats-card p {
+        font-size: 0.8rem;
+    }
+
+    /* Router cards */
+    .router-card {
+        padding: 1rem;
+    }
+
+    .router-card h5 {
+        font-size: 1rem;
+    }
+
+    .router-card .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    /* Tables */
+    .table-responsive {
+        border-radius: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Bottom Navigation Space (for FAB) */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 80px;
+    }
+
+    .main-content {
+        padding-bottom: 2rem;
+    }
+}
+
+/* Haptic Feedback Effect */
+@keyframes haptic {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.95);
+    }
+}
+
+.haptic-feedback {
+    animation: haptic 0.1s ease;
+}
+
+/* Loading State for Pull-to-Refresh */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* Gesture Trail Effect */
+.gesture-trail {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.6) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 9999;
+    animation: trailFade 0.5s ease-out forwards;
+}
+
+@keyframes trailFade {
+    to {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Prevent Text Selection During Gestures */
+.no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Mobile Modal Improvements */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        padding: 1rem 1.25rem;
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.25rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Hide FAB on Desktop */
+@media (min-width: 769px) {
+    .mobile-fab {
+        display: none;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .pull-to-refresh-indicator {
+        background: #2d3748;
+    }
+
+    .pull-text {
+        color: #e2e8f0;
+    }
+
+    .mobile-menu-btn {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+
+    .fab-action {
+        background: #2d3748;
+        border-color: #667eea;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .pull-icon,
+    .fab-main,
+    .fab-action,
+    .mobile-menu-btn {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* Safe Area Insets (for notched devices) */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .mobile-fab {
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        right: calc(20px + env(safe-area-inset-right));
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+    }
+}

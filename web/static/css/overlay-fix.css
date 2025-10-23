@@ -1,0 +1,84 @@
+/* OVERLAY FIX - Menghilangkan elemen putih yang menghalangi */
+
+/* Hapus semua backdrop yang tidak diperlukan */
+.modal-backdrop,
+.modal-backdrop.show,
+.modal-backdrop.fade {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Pastikan modal tidak menghalangi saat tidak diperlukan */
+.modal {
+    display: none !important;
+}
+
+.modal.show {
+    display: block !important;
+}
+
+/* Fix untuk loading elements yang stuck */
+.spinner-border {
+    max-width: 2rem !important;
+    max-height: 2rem !important;
+}
+
+/* Pastikan loading elements hilang setelah selesai */
+.loading-complete .spinner-border {
+    display: none !important;
+}
+
+/* Reset z-index untuk elemen yang menghalangi */
+body > * {
+    position: relative;
+    z-index: auto;
+}
+
+/* Pastikan navbar tetap di atas */
+.navbar {
+    z-index: 1030 !important;
+}
+
+/* Pastikan modal di atas saat diperlukan */
+.modal.show {
+    z-index: 1050 !important;
+}
+
+/* Fix untuk overlay putih yang mungkin tersembunyi */
+.overlay-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Hapus background putih yang tidak diperlukan */
+body::before,
+body::after,
+.container-fluid::before,
+.container-fluid::after {
+    display: none !important;
+}
+
+/* Pastikan konten utama terlihat */
+.page-header,
+.container-fluid,
+#routerCardsContainer {
+    position: relative !important;
+    z-index: 1 !important;
+    background: transparent !important;
+}
+
+/* Force show konten utama */
+.router-card,
+.card,
+.alert,
+.table {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+.table {
+    display: table !important;
+}

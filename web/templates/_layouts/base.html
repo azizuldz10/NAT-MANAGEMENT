@@ -1,0 +1,51 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>{{.Title}} - NAT Management</title>
+    <!-- Common CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/theme.css" rel="stylesheet">
+    <link href="/static/css/overlay-fix.css" rel="stylesheet">
+    <link href="/static/css/simple-mobile-fix.css" rel="stylesheet">
+    <link href="/static/css/toast.css" rel="stylesheet">
+    <!-- Page-specific CSS -->
+    {{block "head_extra" .}}{{end}}
+</head>
+<body>
+    <!-- Optional Version Badge (override per-page) -->
+    {{block "version_badge" .}}{{end}}
+
+    <!-- Shared Sidebar -->
+    {{template "sidebar" .}}
+
+    <!-- Hamburger Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle sidebar">
+        <div class="hamburger-icon" id="hamburgerIcon" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        {{block "page_header" .}}{{end}}
+        {{block "page_content" .}}{{end}}
+    </div>
+
+    <!-- Common JS -->
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/api-utils.js"></script>
+    <script src="/static/js/responsive.js"></script>
+
+    <!-- Page-specific JS -->
+    {{block "scripts_extra" .}}{{end}}
+</body>
+</html>
+{{end}}

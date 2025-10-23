@@ -1,0 +1,2013 @@
+{{define "nat_management.html"}}{{template "base" .}}{{end}}
+
+{{define "head_extra"}}
+    <!-- Page-specific CSS -->
+    <link href="/static/css/auto-refresh.css" rel="stylesheet">
+    <link href="/static/css/advanced-search.css" rel="stylesheet">
+    <link href="/static/css/data-export.css" rel="stylesheet">
+    <link href="/static/css/skeleton-loader.css" rel="stylesheet">
+    <link href="/static/css/mobile-ux.css" rel="stylesheet">
+    <link href="/static/css/quick-actions-toolbar.css" rel="stylesheet">
+    <style>
+        /* Version Badge */
+        .version-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 576px) {
+            .version-badge {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+                bottom: 8px;
+                right: 8px;
+            }
+        }
+
+        /* WiFi Extraction Modal Styling */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .font-monospace {
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+{{end}}
+
+{{define "version_badge"}}
+    <div class="version-badge">v4.2</div>
+{{end}}
+
+{{define "page_header"}}
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-12 text-center">
+                    <h1><i class="fas fa-network-wired"></i> NAT Management Dashboard</h1>
+                    <p class="mb-0 fs-5">Kelola konfigurasi NAT Router dengan mudah dan aman</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "page_content"}}
+    <div class="container-fluid">
+        <!-- Quick Actions Bar for Mobile -->
+        <div class="quick-actions d-lg-none">
+            <button class="btn btn-primary btn-sm" onclick="refreshData()">
+                <i class="fas fa-sync-alt" id="refreshIconMobile"></i> Refresh Data
+            </button>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                <div class="stats-card">
+                    <h4 id="configuredRouters">0</h4>
+                    <p><i class="fas fa-router"></i> Router Terkonfigurasi</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                <div class="stats-card">
+                    <h4 id="activeNATRules">0</h4>
+                    <p><i class="fas fa-network-wired"></i> NAT Rules Aktif</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                <div class="stats-card">
+                    <h4 id="totalOnlineClients">0</h4>
+                    <p><i class="fas fa-users"></i> Client Online</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                <div class="stats-card">
+                    <h4 id="systemHealth">Checking...</h4>
+                    <p><i class="fas fa-heartbeat"></i> System Health</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROUTER SECTIONS WRAPPER - Semua section di bawah ini akan di-hide jika tidak ada router -->
+        <div id="routerSectionsWrapper">
+            <!-- Online Clients -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-users"></i> Client Online <span class="badge bg-light text-dark" id="totalClientsCount">0</span></h5>
+                            <button class="btn btn-light btn-sm" onclick="refreshClients()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- Advanced Search and Filter Container -->
+                            <div id="search-filter-container"></div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Router</th>
+                                            <th>Username</th>
+                                            <th>IP Address</th>
+                                            <th class="d-none d-md-table-cell">Uptime</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clientsTable">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4">
+                                                <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-2"></i>
+                                                <p class="text-muted mb-0">Loading online clients...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END ROUTER SECTIONS WRAPPER -->
+
+        <!-- NO ROUTER MESSAGE - Akan ditampilkan jika tidak ada router -->
+        <div id="noRouterMessage" style="display: none;">
+            <div class="row">
+                <div class="col-12 text-center py-5">
+                    <div class="alert alert-info" style="max-width: 600px; margin: 0 auto;">
+                        <i class="fas fa-info-circle fa-3x mb-3 d-block"></i>
+                        <h5><strong>Tidak Ada Router Terkonfigurasi</strong></h5>
+                        <p class="mb-3">Saat ini tidak ada router yang dikonfigurasi untuk akun Anda.</p>
+                        <hr>
+                        <p class="mb-2"><strong>Untuk menambahkan router:</strong></p>
+                        <ol class="text-start" style="display: inline-block; text-align: left;">
+                            <li>Hubungi Administrator untuk menambahkan akses router</li>
+                            <li>Atau jika Anda Administrator, silakan ke menu <strong>Router Management</strong></li>
+                        </ol>
+                        <div class="mt-3" id="addRouterButtonContainer">
+                            <!-- Button akan ditambahkan via JavaScript jika user adalah admin -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END NO ROUTER MESSAGE -->
+    </div> <!-- End container-fluid -->
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle"></i> Berhasil</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="successMessage">
+                    Operation successful!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="errorMessage">
+                    An error occurred.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Router Configuration Modal -->
+    <div class="modal fade" id="routerConfigModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-router"></i>
+                        <span id="modalRouterName">Router Configuration</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalConfigContent">
+                    <div class="text-center">
+                        <i class="fas fa-circle-notch fa-spin fa-3x text-primary mb-3"></i>
+                        <p class="mt-2">Memuat konfigurasi router...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshRouterConfig()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ONT WiFi Extraction Modal -->
+    <div class="modal fade" id="wifiExtractionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-wifi"></i>
+                        <span id="wifiModalRouterName">WiFi Password Extraction</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" id="wifiModalCloseBtn"></button>
+                </div>
+                <div class="modal-body" id="wifiModalContent">
+                    <div class="text-center">
+                        <i class="fas fa-circle-notch fa-spin fa-3x text-primary mb-3"></i>
+                        <p class="mt-3 fw-bold">Sedang mengekstrak password WiFi...</p>
+                        <p class="text-muted">Proses ini membutuhkan waktu 10-30 detik</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick NAT Update Modal -->
+    <div class="modal fade" id="quickNATUpdateModal" tabindex="-1">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-bolt"></i>
+                        <span id="quickNATModalTitle">Quick NAT Update</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" id="quickNATModalCloseBtn"></button>
+                </div>
+                <div class="modal-body" id="quickNATModalContent">
+                    <div class="text-center">
+                        <i class="fas fa-circle-notch fa-spin fa-3x text-success mb-3"></i>
+                        <p class="mt-3 fw-bold">Updating NAT configuration...</p>
+                        <p class="text-muted">Please wait...</p>
+                    </div>
+                </div>
+                <div class="modal-footer" id="quickNATModalFooter" style="display: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "scripts_extra"}}
+    <!-- Page-specific JS -->
+    <script src="/static/js/smart-auto-refresh.js"></script>
+    <script src="/static/js/advanced-search-filter.js"></script>
+    <script src="/static/js/data-exporter.js"></script>
+    <!-- keyboard shortcuts script disabled -->
+    <script src="/static/js/skeleton-loader.js"></script>
+    <script src="/static/js/mobile-ux-enhancer.js"></script>
+    <script src="/static/js/quick-actions-toolbar.js"></script>
+
+    <!-- External Libraries for Export (loaded from CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // NAT Management Application
+        let allClients = {};
+        let allClientsFlat = []; // Flat array for search/filter
+        let natConfigs = {};
+        let isLoading = false;
+        let currentUserData = null;
+        let currentModalRouter = null;
+        let advancedSearch = null; // Advanced search instance
+        let dataExporter = null; // Data exporter instance
+        let mobileUXEnhancer = null; // Mobile UX enhancer instance
+        let quickActionsToolbar = null; // Quick Actions Toolbar instance
+
+        // Enhanced caching system untuk prevent flickering & stuck loading
+        let natConfigsCache = {};           // Cache untuk anti-kedip
+        let lastNATConfigLoad = null;       // Timestamp last successful load
+        let natConfigLoadAttempts = 0;      // Counter untuk retry attempts
+        const NAT_CONFIG_CACHE_TTL = 15000; // 15 seconds cache validity
+
+        // Sidebar Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 NAT Management Application Starting...');
+
+            // Initialize sidebar toggle
+            initializeSidebar();
+
+            // Remove any stuck overlays
+            removeStuckOverlays();
+
+            initializeApplication();
+        });
+
+        function initializeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.getElementById('mainContent');
+
+            // Toggle sidebar function
+            function toggleSidebar() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    // Desktop: toggle collapsed state
+                    sidebar.classList.toggle('collapsed');
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('collapsed'));
+                } else {
+                    // Mobile: toggle open state
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('active', sidebar.classList.contains('open'));
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('open'));
+
+                    // Prevent body scroll when sidebar is open on mobile
+                    if (sidebar.classList.contains('open')) {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                }
+            }
+
+            // Close sidebar when clicking overlay (mobile only)
+            function closeSidebar() {
+                if (window.innerWidth < 992) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    hamburgerIcon.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            // Event listeners
+            hamburgerBtn.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    // Desktop: reset mobile classes
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Mobile: reset desktop classes
+                    sidebar.classList.remove('collapsed');
+                }
+
+                // Update hamburger icon state
+                hamburgerIcon.classList.toggle('active',
+                    isLargeScreen ? sidebar.classList.contains('collapsed') : sidebar.classList.contains('open')
+                );
+            });
+
+            // Initialize sidebar state based on screen size
+            const isLargeScreen = window.innerWidth >= 992;
+            if (!isLargeScreen) {
+                sidebar.classList.remove('collapsed');
+            }
+        }
+
+        async function initializeApplication() {
+            try {
+                console.log('📋 Loading user authentication...');
+
+                await loadUserInfo();
+
+                console.log('📋 Loading NAT data...');
+                await Promise.all([
+                    loadConnectionStatus(),
+                    loadNATConfigurations(),
+                    loadClients()
+                ]);
+
+                console.log('✅ NAT Management Application Ready');
+
+                // Start auto refresh untuk sinkronisasi
+                startAutoRefresh();
+            } catch (error) {
+                console.error('❌ Application initialization failed:', error);
+                showError('Gagal memuat aplikasi: ' + error.message);
+                hideAllLoadingStates();
+            } finally {
+                // IMPORTANT: Initialize UI components ALWAYS, even if data loading fails
+                // This ensures search/filter UI is available even when backend is down
+                console.log('🔧 Initializing UI components...');
+
+                // Initialize Advanced Search & Filter
+                initializeAdvancedSearch();
+
+                // Keyboard Shortcuts disabled
+
+                // Initialize Mobile UX Enhancements
+                initializeMobileUX();
+
+                // Initialize Quick Actions Toolbar
+                initializeQuickActionsToolbar();
+
+                console.log('✅ UI components initialized');
+            }
+        }
+
+
+        // Show NAT Configuration Error (fallback after multiple failures)
+        function showNATConfigError() {
+            console.log('⚠️ Showing NAT config error fallback UI');
+
+            // Get all router cards and replace loading with error + retry button
+            const routerCards = document.querySelectorAll('[id^="config-"]');
+            routerCards.forEach(configElement => {
+                if (configElement.innerHTML.includes('fa-spin') || configElement.innerHTML.includes('Loading')) {
+                    configElement.innerHTML = `
+                        <div class="text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> <strong>Load Failed</strong>
+                        </div>
+                        <div class="text-muted mt-2">
+                            <small>Gagal memuat konfigurasi</small>
+                            <br>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="retryLoadNATConfig()">
+                                <i class="fas fa-redo"></i> Coba Lagi
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Retry loading NAT configuration
+        function retryLoadNATConfig() {
+            console.log('🔄 Retrying NAT configuration load...');
+            natConfigLoadAttempts = 0; // Reset counter
+            lastNATConfigLoad = null; // Invalidate cache to force fresh load
+            loadNATConfigurations();
+        }
+
+        // Hide all loading states (emergency cleanup)
+        function hideAllLoadingStates() {
+            // Hide loading router cards
+            const loadingCards = document.getElementById('loadingRouterCards');
+            if (loadingCards) loadingCards.style.display = 'none';
+
+            // Replace connection status loading with error
+            const connectionStatus = document.getElementById('connectionStatus');
+            if (connectionStatus && connectionStatus.innerHTML.includes('fa-circle-notch fa-spin')) {
+                connectionStatus.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle"></i> Gagal memuat status koneksi.
+                        <button class="btn btn-sm btn-outline-warning ms-2" onclick="loadConnectionStatus()">
+                            <i class="fas fa-redo"></i> Coba Lagi
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Replace client table loading with error
+            const clientsTable = document.getElementById('clientsTable');
+            if (clientsTable && clientsTable.innerHTML.includes('fa-circle-notch fa-spin')) {
+                clientsTable.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-warning">
+                            <i class="fas fa-exclamation-circle"></i> Gagal memuat data client.
+                            <button class="btn btn-sm btn-outline-warning ms-2" onclick="loadClients()">
+                                <i class="fas fa-redo"></i> Coba Lagi
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Remove warning banner if exists
+            const warningBanner = document.getElementById('loadingWarning');
+            if (warningBanner) warningBanner.remove();
+        }
+
+        // Show success/error messages using Toast notifications
+        function showSuccess(message) {
+            Toast.success('Success', message);
+        }
+
+        function showError(message) {
+            Toast.error('Error', message);
+        }
+
+        function openModal(modalEl) {
+            // Show modal and set accessibility attributes
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.setAttribute('aria-hidden', 'false');
+
+            // Ensure dialog semantics
+            const dialog = modalEl.querySelector('.modal-dialog');
+            if (dialog) {
+                dialog.setAttribute('role', 'dialog');
+                dialog.setAttribute('aria-modal', 'true');
+            }
+
+            // Save previously focused element to restore later
+            modalEl._prevFocus = document.activeElement;
+
+            // Focus trap setup: focus first focusable element within modal
+            const focusableSelectors = [
+                'a[href]',
+                'button:not([disabled])',
+                'textarea:not([disabled])',
+                'input:not([disabled])',
+                'select:not([disabled])',
+                '[tabindex]:not([tabindex="-1"])'
+            ].join(',');
+
+            const focusables = Array.from(modalEl.querySelectorAll(focusableSelectors))
+                .filter(el => el.offsetParent !== null);
+            const firstFocusable = focusables[0] || modalEl.querySelector('.btn-close');
+            const lastFocusable = focusables[focusables.length - 1] || firstFocusable;
+
+            if (firstFocusable) {
+                firstFocusable.focus();
+            }
+
+            // Close handlers
+            const closeBtn = modalEl.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => closeModal(modalEl));
+            }
+            const dismissButtons = modalEl.querySelectorAll('[data-bs-dismiss="modal"], [data-dismiss="modal"]');
+            dismissButtons.forEach(btn => {
+                btn.addEventListener('click', () => closeModal(modalEl));
+            });
+
+            // Keyboard: ESC to close
+            function onEsc(e) {
+                if (e.key === 'Escape') {
+                    closeModal(modalEl);
+                }
+            }
+
+            // Click outside to close
+            function onOutside(e) {
+                const dlg = modalEl.querySelector('.modal-dialog');
+                if (dlg && !dlg.contains(e.target)) {
+                    closeModal(modalEl);
+                }
+            }
+
+            // Trap Tab navigation inside modal
+            function onFocusTrapKeydown(e) {
+                if (e.key !== 'Tab') return;
+                if (focusables.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+                const active = document.activeElement;
+                const atFirst = active === firstFocusable;
+                const atLast = active === lastFocusable;
+
+                if (e.shiftKey) {
+                    if (atFirst || !modalEl.contains(active)) {
+                        e.preventDefault();
+                        lastFocusable.focus();
+                    }
+                } else {
+                    if (atLast || !modalEl.contains(active)) {
+                        e.preventDefault();
+                        firstFocusable.focus();
+                    }
+                }
+            }
+
+            // Register handlers
+            modalEl._escHandler = onEsc;
+            modalEl._outsideHandler = onOutside;
+            modalEl._trapHandler = onFocusTrapKeydown;
+            window.addEventListener('keydown', onEsc);
+            window.addEventListener('keydown', onFocusTrapKeydown);
+            window.addEventListener('click', onOutside, { capture: true });
+        }
+
+        function closeModal(modalEl) {
+            // Hide modal and update accessibility attributes
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            modalEl.setAttribute('aria-hidden', 'true');
+
+            // Remove handlers
+            if (modalEl._escHandler) {
+                window.removeEventListener('keydown', modalEl._escHandler);
+                modalEl._escHandler = null;
+            }
+            if (modalEl._outsideHandler) {
+                window.removeEventListener('click', modalEl._outsideHandler, { capture: true });
+                modalEl._outsideHandler = null;
+            }
+            if (modalEl._trapHandler) {
+                window.removeEventListener('keydown', modalEl._trapHandler);
+                modalEl._trapHandler = null;
+            }
+
+            // Restore focus to the element that had it before the modal opened
+            if (modalEl._prevFocus && typeof modalEl._prevFocus.focus === 'function') {
+                modalEl._prevFocus.focus();
+            } else {
+                // Fallback
+                const hamburgerBtn = document.getElementById('hamburgerBtn');
+                if (hamburgerBtn) hamburgerBtn.focus();
+            }
+        }
+
+        // Remove stuck overlays function
+        function removeStuckOverlays() {
+            console.log('🧹 Removing stuck overlays...');
+
+            // Remove modal backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+
+            // Hide all modals
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+            });
+
+            // Remove loading overlays
+            const loadingElements = document.querySelectorAll('#loadingRouterCards');
+            loadingElements.forEach(el => {
+                if (el) el.style.display = 'none';
+            });
+
+            // Reset body classes
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            console.log('✅ Stuck overlays removed');
+        }
+
+        // User Authentication & Info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error('Failed to load user info');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    currentUserData = result.data;
+
+                    // Update UI with user info
+                    document.getElementById('currentUserSidebar').textContent = currentUserData.user.full_name;
+                    document.getElementById('userRoleSidebar').textContent = currentUserData.user.role;
+
+                    // Set user avatar initial
+                    const userAvatar = document.getElementById('userAvatar');
+                    if (userAvatar && currentUserData.user.full_name) {
+                        userAvatar.textContent = currentUserData.user.full_name.charAt(0).toUpperCase();
+                    }
+
+                    // Show/hide admin menu based on role
+                    const routerManagementLink = document.getElementById('routerManagementLink');
+                    const userManagementLink = document.getElementById('userManagementLink');
+                    const activityLogsLink = document.getElementById('activityLogsLink');
+                    if (routerManagementLink) {
+                        if (currentUserData.user.role === 'Administrator') {
+                            routerManagementLink.style.display = 'flex';
+                        } else {
+                            routerManagementLink.style.display = 'none';
+                        }
+                    }
+                    if (userManagementLink) {
+                        if (currentUserData.user.role === 'Administrator') {
+                            userManagementLink.style.display = 'flex';
+                        } else {
+                            userManagementLink.style.display = 'none';
+                        }
+                    }
+                    if (activityLogsLink) {
+                        if (currentUserData.user.role === 'Administrator') {
+                            activityLogsLink.style.display = 'flex';
+                        } else {
+                            activityLogsLink.style.display = 'none';
+                        }
+                    }
+
+                    // Render router cards based on user access
+                    renderRouterCards(currentUserData.nat_router_access);
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                showError('Gagal memuat informasi user');
+            }
+        }
+
+        // Connection Status
+        async function loadConnectionStatus() {
+            const statusContainer = document.getElementById('connectionStatus');
+            const refreshIcon = document.getElementById('refreshConnectionIcon');
+
+            // Add spinning animation
+            if (refreshIcon) {
+                refreshIcon.classList.add('fa-spin');
+            }
+
+            try {
+                const response = await fetch('/api/nat/test');
+                if (!response.ok) throw new Error('Failed to test connections');
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    renderConnectionStatus(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading connection status:', error);
+                statusContainer.innerHTML = `
+                    <div class="alert alert-danger mb-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Gagal mengetes koneksi router</strong>
+                                <p class="mb-0 mt-1 small">${error.message}</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="loadConnectionStatus()">
+                                <i class="fas fa-redo me-1"></i> Coba Lagi
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } finally {
+                // Remove spinning animation
+                if (refreshIcon) {
+                    refreshIcon.classList.remove('fa-spin');
+                }
+            }
+        }
+
+        // NAT Configurations with Enhanced Caching
+        async function loadNATConfigurations() {
+            // Check cache validity - skip if data is fresh
+            const now = Date.now();
+            if (lastNATConfigLoad && (now - lastNATConfigLoad < NAT_CONFIG_CACHE_TTL)) {
+                console.log('⏭️ Using cached NAT configs (within TTL, age: ' + (now - lastNATConfigLoad) + 'ms)');
+                return;
+            }
+
+            try {
+                console.log('🔄 Fetching fresh NAT configurations...');
+                const response = await fetch('/api/nat/configs');
+                if (!response.ok) throw new Error('Failed to load NAT configs');
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    natConfigs = result.data;
+                    lastNATConfigLoad = Date.now(); // Update timestamp
+                    natConfigLoadAttempts = 0; // Reset retry counter on success
+
+                    updateNATConfigs(result.data);
+                    updateStatistics();
+
+                    console.log('✅ NAT configurations loaded successfully');
+                }
+            } catch (error) {
+                natConfigLoadAttempts++;
+                console.error(`❌ Error loading NAT configurations (attempt ${natConfigLoadAttempts}):`, error);
+
+                // After 3 failed attempts, show error UI instead of infinite loading
+                if (natConfigLoadAttempts >= 3) {
+                    console.error('⚠️ Too many failed attempts, showing error UI');
+                    showNATConfigError();
+                } else {
+                    showError('Gagal memuat konfigurasi NAT (akan retry otomatis)');
+                }
+            }
+        }
+
+        // Online Clients
+        async function loadClients() {
+            const clientsTable = document.getElementById('clientsTable');
+
+            try {
+                const response = await fetch('/api/nat/clients');
+                if (!response.ok) throw new Error('Failed to load clients');
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    allClients = result.data;
+                    renderClients(result.data);
+                    updateClientStatistics(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                clientsTable.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Gagal memuat data client
+                            <button class="btn btn-sm btn-outline-danger ms-2" onclick="loadClients()">
+                                <i class="fas fa-redo"></i> Coba Lagi
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Refresh All Data (Updated for sidebar)
+        // 🔥 PROGRESSIVE LOADING OPTIMIZATION: Load critical data first, rest in background
+        async function refreshData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            const refreshIconMobile = document.getElementById('refreshIconMobile');
+            const refreshIconSidebar = document.getElementById('refreshIconSidebar');
+
+            // Add spinning animation to all icons
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            if (refreshIconMobile) refreshIconMobile.classList.add('fa-spin');
+            if (refreshIconSidebar) refreshIconSidebar.classList.add('fa-spin');
+
+            try {
+                // Reload user info first to get updated router list
+                await loadUserInfo();
+
+                // 🔥 PROGRESSIVE LOADING: Load NAT configs FIRST (most important - user can see router cards immediately)
+                await loadNATConfigurations();
+
+                // Then load clients and connection status in background (non-blocking)
+                // User can already interact with router cards while these load
+                Promise.all([
+                    loadClients(),
+                    loadConnectionStatus()
+                ]).catch(error => {
+                    console.error('Background loading error:', error);
+                    // Don't show error for background loading
+                });
+
+                showSuccess('Data berhasil direfresh');
+            } catch (error) {
+                showError('Gagal refresh data');
+            } finally {
+                // Remove spinning animation from all icons
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+                if (refreshIconMobile) refreshIconMobile.classList.remove('fa-spin');
+                if (refreshIconSidebar) refreshIconSidebar.classList.remove('fa-spin');
+            }
+        }
+
+        // Smart Auto-Refresh System (replaces old interval-based refresh)
+        let smartRefresh = null;
+
+        function startAutoRefresh() {
+            // Initialize Smart Auto-Refresh
+            if (smartRefresh) {
+                smartRefresh.start();
+                return;
+            }
+
+            smartRefresh = new SmartAutoRefresh({
+                defaultInterval: 90000, // 90 seconds normal
+                fastInterval: 30000, // 30 seconds fast mode
+                slowInterval: 180000, // 3 minutes slow mode
+                pauseOnInteraction: true, // Pause during user interaction
+                resumeDelay: 5000, // Resume after 5s of inactivity
+                refreshCallback: async () => {
+                    console.log('🔄 Smart auto-refresh triggered...');
+                    try {
+                        await loadUserInfo(); // Reload user info untuk update router list
+
+                        // 🔥 PROGRESSIVE: Load NAT configs first (most important)
+                        await loadNATConfigurations(); // Will use cache if data is fresh
+
+                        // Load clients and test in background
+                        Promise.all([
+                            loadClients(),
+                            loadConnectionStatus()
+                        ]).catch(error => console.error('Background auto-refresh error:', error));
+
+                        console.log('✅ Smart auto-refresh completed');
+                    } catch (error) {
+                        console.error('❌ Smart auto-refresh failed:', error);
+                        throw error; // Re-throw so SmartAutoRefresh can handle it
+                    }
+                },
+                autoStart: true,
+                showIndicator: true
+            });
+
+            console.log('✅ Smart Auto-Refresh initialized');
+        }
+
+        function stopAutoRefresh() {
+            if (smartRefresh) {
+                smartRefresh.stop();
+            }
+        }
+
+        // Refresh Clients only
+        async function refreshClients() {
+            try {
+                await loadClients();
+                showSuccess('Client list berhasil direfresh');
+            } catch (error) {
+                showError('Gagal refresh client list');
+            }
+        }
+
+        // Toggle visibility of sections based on router availability
+        // SIMPLE VERSION - Cukup hide/show 2 container saja!
+        function toggleSectionsVisibility(hasRouters) {
+            const routerSections = document.getElementById('routerSectionsWrapper');
+            const noRouterMsg = document.getElementById('noRouterMessage');
+
+            if (hasRouters) {
+                // Ada router: Tampilkan semua sections, sembunyikan pesan no router
+                if (routerSections) routerSections.style.display = 'block';
+                if (noRouterMsg) noRouterMsg.style.display = 'none';
+            } else {
+                // Tidak ada router: Sembunyikan semua sections, tampilkan pesan no router
+                if (routerSections) routerSections.style.display = 'none';
+                if (noRouterMsg) noRouterMsg.style.display = 'block';
+
+                // Update button untuk admin
+                const btnContainer = document.getElementById('addRouterButtonContainer');
+                if (btnContainer && currentUserData && currentUserData.user.role === 'Administrator') {
+                    btnContainer.innerHTML = `
+                        <a href="/routers" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Tambah Router Baru
+                        </a>
+                    `;
+                }
+            }
+        }
+
+        // Render router cards - SIMPLIFIED VERSION
+        function renderRouterCards(allowedRouters) {
+            const container = document.getElementById('routerCardsContainer');
+            const loading = document.getElementById('loadingRouterCards');
+
+            // Hide loading spinner
+            if (loading) loading.style.display = 'none';
+
+            // Check if has routers
+            const hasRouters = allowedRouters && allowedRouters.length > 0;
+
+            // Toggle visibility sections
+            toggleSectionsVisibility(hasRouters);
+
+            // Jika tidak ada router, function berhenti di sini
+            // Karena noRouterMessage sudah ditampilkan oleh toggleSectionsVisibility()
+            if (!hasRouters) {
+                return;
+            }
+
+            // Jika ada router, render cards
+            let cardsHTML = '';
+            allowedRouters.forEach(routerName => {
+                const routerClass = routerName.toLowerCase().replace(/[\s()]/g, '-');
+                cardsHTML += `
+                    <div class="col-lg-4 col-md-6 col-12 mb-3">
+                        <div class="router-card ${routerClass}" id="router-${routerName}">
+                            <h5><i class="fas fa-router"></i> ${routerName}</h5>
+                            <div class="connection-status" id="status-${routerName}">
+                                <small class="text-muted"><i class="fas fa-circle-notch fa-spin"></i> Checking...</small>
+                            </div>
+                            <div class="nat-config" id="config-${routerName}">
+                                <small class="text-muted"><i class="fas fa-circle-notch fa-spin"></i> Loading...</small>
+                            </div>
+                            <div class="clearfix">
+                                <button class="btn btn-primary btn-sm btn-action" onclick="viewRouterConfig('${routerName}')">
+                                    <i class="fas fa-eye"></i> <span>View</span>
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm btn-action" onclick="testRouterConnection('${routerName}')">
+                                    <i class="fas fa-plug"></i> <span>Test</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (container) {
+                container.innerHTML = cardsHTML;
+            }
+        }
+
+        function renderConnectionStatus(connectionData) {
+            const container = document.getElementById('connectionStatus');
+            let statusHTML = '<div class="row g-3">';
+
+            // Count online/offline routers
+            let onlineCount = 0;
+            let offlineCount = 0;
+            for (const status of Object.values(connectionData)) {
+                if (status.status === 'connected') onlineCount++;
+                else offlineCount++;
+            }
+
+            for (const [routerName, status] of Object.entries(connectionData)) {
+                const isConnected = status.status === 'connected';
+                const statusClass = isConnected ? 'success' : 'danger';
+                const statusIcon = isConnected ? 'check-circle' : 'times-circle';
+                const statusText = isConnected ? 'Online' : 'Offline';
+                const pulseClass = isConnected ? 'pulse-green' : 'pulse-red';
+
+                statusHTML += `
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="connection-status-card status-${statusClass}">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-2">
+                                        <i class="fas fa-router me-2"></i>${routerName}
+                                    </h6>
+                                    <span class="status-badge badge bg-${statusClass}">
+                                        <i class="fas fa-circle ${pulseClass}"></i>
+                                        ${statusText}
+                                    </span>
+                                </div>
+                                <div class="status-icon">
+                                    <i class="fas fa-${statusIcon} fa-3x"></i>
+                                </div>
+                            </div>
+                            ${status.version || status.board || status.uptime ? `
+                                <div class="router-info-detail">
+                                    ${status.version ? `
+                                        <small>
+                                            <i class="fas fa-code-branch"></i>
+                                            <span>Version: ${status.version}</span>
+                                        </small>
+                                    ` : ''}
+                                    ${status.board ? `
+                                        <small>
+                                            <i class="fas fa-microchip"></i>
+                                            <span>Board: ${status.board}</span>
+                                        </small>
+                                    ` : ''}
+                                    ${status.uptime ? `
+                                        <small>
+                                            <i class="fas fa-clock"></i>
+                                            <span>Uptime: ${status.uptime}</span>
+                                        </small>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                            ${status.message && !isConnected ? `
+                                <div class="connection-error">
+                                    <small>
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>${status.message}</span>
+                                    </small>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Update individual router status in cards
+                const statusElement = document.getElementById(`status-${routerName}`);
+                if (statusElement) {
+                    statusElement.innerHTML = `
+                        <i class="fas fa-circle ${isConnected ? 'status-online' : 'status-offline'}"></i>
+                        <strong>${statusText}</strong>
+                    `;
+                }
+            }
+
+            statusHTML += '</div>';
+
+            // Add summary banner at the top
+            const summaryBanner = `
+                <div class="alert ${onlineCount === Object.keys(connectionData).length ? 'alert-success' : offlineCount === Object.keys(connectionData).length ? 'alert-danger' : 'alert-warning'} mb-3">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div>
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Status Summary:</strong>
+                            <span class="ms-2 badge bg-success">${onlineCount} Online</span>
+                            <span class="ms-1 badge bg-danger">${offlineCount} Offline</span>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Last checked: ${new Date().toLocaleTimeString('id-ID')}
+                        </small>
+                    </div>
+                </div>
+            `;
+
+            if (container) {
+                container.innerHTML = summaryBanner + statusHTML;
+            }
+        }
+
+        function updateNATConfigs(configs) {
+            // PENTING: Anti-kedip! Hanya update DOM jika data benar-benar berubah
+            console.log('🔧 Updating NAT configs for routers:', Object.keys(configs));
+
+            for (const [routerName, config] of Object.entries(configs)) {
+                try {
+                    // Create config signature untuk compare dengan cache
+                    const configSignature = JSON.stringify({
+                        found: config.found,
+                        current_ip: config.current_ip,
+                        current_port: config.current_port,
+                        tunnel_endpoint: config.tunnel_endpoint,
+                        public_ont_url: config.public_ont_url
+                    });
+
+                    // Cek apakah data berubah dari cache sebelumnya
+                    if (natConfigsCache[routerName] === configSignature) {
+                        console.log(`⏭️ Skipping ${routerName} - no changes detected`);
+                        continue; // Skip update, data tidak berubah
+                    }
+
+                    // Update cache dengan data terbaru
+                    natConfigsCache[routerName] = configSignature;
+
+                    console.log(`📝 Processing router: ${routerName} - DATA CHANGED`);
+
+                    const configElement = document.getElementById(`config-${routerName}`);
+                    if (!configElement) {
+                        console.warn(`⚠️ Config element not found for router: ${routerName}`);
+                        continue;
+                    }
+
+                    // Update DOM hanya jika data benar-benar berubah
+                    if (config.found) {
+                        configElement.innerHTML = `
+                            <div class="text-success">
+                                <i class="fas fa-check-circle"></i> <strong>NAT Configured</strong>
+                            </div>
+                            <div class="mt-2">
+                                <div class="tunnel-endpoint">Target: ${config.current_ip}:${config.current_port}</div>
+                                ${config.tunnel_endpoint ? `<div class="mt-1"><small>Tunnel: ${config.tunnel_endpoint}</small></div>` : ''}
+                                ${config.public_ont_url ? `<div class="mt-1"><small><a href="${config.public_ont_url}" target="_blank" class="text-decoration-none">ONT URL <i class="fas fa-external-link-alt"></i></a></small></div>` : ''}
+                            </div>
+                        `;
+
+                        console.log(`✅ Updated config for ${routerName}`);
+
+                        // Update button "Cek Pass" dengan ONT URL dari config card ini
+                        const routerCard = document.getElementById(`router-${routerName}`);
+                        if (routerCard) {
+                            const wifiButton = routerCard.querySelector('.btn-warning');
+                            if (wifiButton) {
+                                if (config.public_ont_url) {
+                                    wifiButton.setAttribute('data-ont-url', config.public_ont_url);
+                                    wifiButton.disabled = false;
+                                    wifiButton.title = `Cek Password WiFi dari ${config.public_ont_url}`;
+                                    console.log(`🔗 Set ONT URL for ${routerName}: ${config.public_ont_url}`);
+                                } else {
+                                    wifiButton.disabled = true;
+                                    wifiButton.title = 'ONT URL belum dikonfigurasi';
+                                    console.log(`⚠️ No ONT URL for ${routerName}`);
+                                }
+                            } else {
+                                console.warn(`⚠️ WiFi button not found in router card: ${routerName}`);
+                            }
+                        } else {
+                            console.warn(`⚠️ Router card not found: router-${routerName}`);
+                        }
+                    } else {
+                        configElement.innerHTML = `
+                            <div class="text-warning">
+                                <i class="fas fa-exclamation-triangle"></i> <strong>No NAT Rule</strong>
+                            </div>
+                            <div class="text-muted"><small>Belum ada konfigurasi NAT</small></div>
+                        `;
+
+                        console.log(`⚠️ No NAT config found for ${routerName}`);
+
+                        // Disable button jika tidak ada config
+                        const routerCard = document.getElementById(`router-${routerName}`);
+                        if (routerCard) {
+                            const wifiButton = routerCard.querySelector('.btn-warning');
+                            if (wifiButton) {
+                                wifiButton.disabled = true;
+                                wifiButton.title = 'NAT belum dikonfigurasi';
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error(`❌ Error updating config for ${routerName}:`, error);
+                    // Continue dengan router lainnya meskipun ada error
+                }
+            }
+
+            console.log('✅ Finished updating NAT configs (with anti-flicker optimization)');
+        }
+
+        function renderClients(clientsData) {
+            const tbody = document.getElementById('clientsTable');
+            let html = '';
+            let totalClients = 0;
+
+            // Convert to flat array for search/filter
+            allClientsFlat = [];
+
+            for (const [routerName, clients] of Object.entries(clientsData)) {
+                clients.forEach(client => {
+                    totalClients++;
+
+                    // Add to flat array with router info
+                    allClientsFlat.push({
+                        ...client,
+                        router: routerName
+                    });
+
+                    html += `
+                        <tr data-router="${routerName}" data-username="${client.username.toLowerCase()}"
+                            data-ip="${client.ip_address}" data-caller="${client.caller_id}">
+                            <td data-label="Router"><span class="badge bg-primary">${routerName}</span></td>
+                            <td data-label="Username">${client.username}</td>
+                            <td data-label="IP Address">
+                                <code>${client.ip_address}</code>
+                                <button class="btn btn-xs btn-outline-success ms-1"
+                                        onclick="selectClientForNAT('${routerName}', '${client.ip_address}', '${client.username}')"
+                                        title="Set sebagai target NAT">
+                                    <i class="fas fa-hand-pointer"></i>
+                                </button>
+                            </td>
+                            <td data-label="Uptime" class="d-none d-md-table-cell">${client.uptime}</td>
+                            <td data-label="Action">
+                                <small class="text-muted">${client.caller_id}</small>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            if (html === '') {
+                html = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            <i class="fas fa-users"></i> Tidak ada client online
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tbody.innerHTML = html;
+            document.getElementById('totalClientsCount').textContent = totalClients;
+
+            // Update Advanced Search data source
+            if (advancedSearch) {
+                advancedSearch.setDataSource(allClientsFlat);
+            }
+
+            // Refresh Quick Actions Toolbar checkboxes
+            if (quickActionsToolbar) {
+                quickActionsToolbar.refreshCheckboxes();
+            }
+        }
+
+        function updateStatistics() {
+            let configuredCount = 0;
+            let activeRules = 0;
+
+            // Get total routers from current user data
+            const totalRouters = currentUserData && currentUserData.nat_router_access
+                ? currentUserData.nat_router_access.length
+                : Object.keys(natConfigs).length;
+
+            for (const config of Object.values(natConfigs)) {
+                if (config.found) {
+                    configuredCount++;
+                    activeRules++;
+                }
+            }
+
+            document.getElementById('configuredRouters').textContent = totalRouters;
+            document.getElementById('activeNATRules').textContent = activeRules;
+
+            // Update health status
+            let healthText = 'Healthy';
+            if (totalRouters === 0) {
+                healthText = 'No Routers';
+            } else if (configuredCount === 0) {
+                healthText = 'Critical';
+            } else if (configuredCount < totalRouters) {
+                healthText = 'Warning';
+            }
+            document.getElementById('systemHealth').textContent = healthText;
+        }
+
+        function updateClientStatistics(clientsData) {
+            let totalClients = 0;
+            for (const clients of Object.values(clientsData)) {
+                totalClients += clients.length;
+            }
+            document.getElementById('totalOnlineClients').textContent = totalClients;
+        }
+
+        // Initialize Advanced Search & Filter
+        function initializeAdvancedSearch() {
+            // Check if container exists first
+            const container = document.getElementById('search-filter-container');
+            if (!container) {
+                console.warn('⚠️ Search container not found, skipping Advanced Search initialization');
+                return;
+            }
+
+            if (advancedSearch) {
+                advancedSearch.destroy();
+            }
+
+            // Get list of routers
+            const routers = currentUserData && currentUserData.nat_router_access
+                ? currentUserData.nat_router_access
+                : [];
+
+            try {
+                advancedSearch = new AdvancedSearchFilter({
+                    searchFields: ['username', 'ip_address', 'caller_id'],
+                    dataSource: allClientsFlat,
+                    onFilter: (filteredData) => {
+                        // Update table display with filtered data
+                        displayFilteredClients(filteredData);
+                    },
+                    containerId: 'search-filter-container',
+                    storageKey: 'nat_client_filters',
+                    debounceDelay: 300
+                });
+
+                // Update router options
+                advancedSearch.updateRouterOptions(routers);
+
+                // Initialize Data Exporter
+                initializeDataExporter();
+
+                console.log('✅ Advanced Search & Filter initialized');
+            } catch (error) {
+                console.error('❌ Failed to initialize Advanced Search:', error);
+            }
+        }
+
+        // Initialize Data Exporter
+        function initializeDataExporter() {
+            if (!dataExporter) {
+                dataExporter = new DataExporter({
+                    appName: 'NAT Management',
+                    defaultFilename: 'nat-clients',
+                    includeTimestamp: true
+                });
+            }
+
+            // Hook export button in Advanced Search to DataExporter
+            const exportBtn = document.querySelector('.export-results-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Get current filtered data
+                    const dataToExport = advancedSearch ? advancedSearch.getResults() : allClientsFlat;
+
+                    if (!dataToExport || dataToExport.length === 0) {
+                        showError('No data to export');
+                        return;
+                    }
+
+                    // Show export dialog
+                    dataExporter.showExportDialog(dataToExport);
+                });
+            }
+
+            console.log('✅ Data Exporter initialized');
+        }
+
+
+        // Initialize Mobile UX Enhancements
+        function initializeMobileUX() {
+            if (!mobileUXEnhancer) {
+                mobileUXEnhancer = new MobileUXEnhancer({
+                    enablePullToRefresh: true,
+                    enableSwipeGestures: true,
+                    enableFAB: true,
+                    refreshCallback: async () => {
+                        // Use existing refresh function
+                        await refreshData();
+                    }
+                });
+
+                console.log('✅ Mobile UX Enhancer initialized');
+            }
+        }
+
+        // Initialize Quick Actions Toolbar
+        function initializeQuickActionsToolbar() {
+            if (!quickActionsToolbar) {
+                quickActionsToolbar = new QuickActionsToolbar({
+                    tableSelector: '#clientsTable',
+                    enableBulkDisconnect: true,
+                    enableBulkExport: true,
+                    enableBulkNATTarget: true,
+                    maxSelections: 100,
+                    confirmActions: true
+                });
+
+                console.log('✅ Quick Actions Toolbar initialized');
+            }
+        }
+
+        // Display filtered clients in table
+        function displayFilteredClients(filteredData) {
+            const tbody = document.getElementById('clientsTable');
+
+            if (!filteredData || filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            <i class="fas fa-search"></i> No clients match your filter
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredData.forEach(client => {
+                html += `
+                    <tr data-router="${client.router}" data-username="${client.username.toLowerCase()}"
+                        data-ip="${client.ip_address}" data-caller="${client.caller_id}">
+                        <td data-label="Router"><span class="badge bg-primary">${client.router}</span></td>
+                        <td data-label="Username">${client.username}</td>
+                        <td data-label="IP Address">
+                            <code>${client.ip_address}</code>
+                            <button class="btn btn-xs btn-outline-success ms-1"
+                                    onclick="selectClientForNAT('${client.router}', '${client.ip_address}', '${client.username}')"
+                                    title="Set sebagai target NAT">
+                                <i class="fas fa-hand-pointer"></i>
+                            </button>
+                        </td>
+                        <td data-label="Uptime" class="d-none d-md-table-cell">${client.uptime}</td>
+                        <td data-label="Action">
+                            <small class="text-muted">${client.caller_id}</small>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+            // Refresh Quick Actions Toolbar checkboxes
+            if (quickActionsToolbar) {
+                quickActionsToolbar.refreshCheckboxes();
+            }
+        }
+
+        // Legacy function for compatibility (now handled by Advanced Search)
+        function filterClients() {
+            // This function is now deprecated - Advanced Search handles filtering
+            console.log('filterClients() called - now handled by Advanced Search');
+        }
+
+        async function selectClientForNAT(routerName, ipAddress, username) {
+            // Show confirmation dialog with PPPoE username
+            const confirmed = confirm(`🚀 Quick NAT Update\n\nUpdate NAT untuk router ${routerName}:\n• PPPoE Username: ${username}\n• IP: ${ipAddress}\n\nLanjutkan?`);
+
+            if (!confirmed) {
+                return;
+            }
+
+            // Open modal with port selection form
+            const modal = document.getElementById('quickNATUpdateModal');
+            const modalTitle = document.getElementById('quickNATModalTitle');
+            const modalContent = document.getElementById('quickNATModalContent');
+            const modalFooter = document.getElementById('quickNATModalFooter');
+            const closeBtn = document.getElementById('quickNATModalCloseBtn');
+
+            // Update modal title
+            modalTitle.textContent = `Quick NAT Update - ${routerName}`;
+
+            // Show port selection form
+            modalContent.innerHTML = `
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Informasi Target NAT</h6>
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>Router:</strong></div>
+                        <div class="col-8">${routerName}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-4"><strong>PPPoE Username:</strong></div>
+                        <div class="col-8">${username}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4"><strong>Target IP:</strong></div>
+                        <div class="col-8"><code>${ipAddress}</code></div>
+                    </div>
+                </div>
+
+                <div class="card border-success mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-network-wired"></i> Pilih Port Tujuan</h6>
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label"><strong>Target Port:</strong></label>
+                        <div class="row g-2">
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="portSelection" id="port80" value="80" checked>
+                                    <label class="form-check-label" for="port80">
+                                        <strong>80</strong> (HTTP)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="portSelection" id="port8080" value="8080">
+                                    <label class="form-check-label" for="port8080">
+                                        <strong>8080</strong> (Alt HTTP)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="portSelection" id="port443" value="443">
+                                    <label class="form-check-label" for="port443">
+                                        <strong>443</strong> (HTTPS)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="portSelection" id="port8443" value="8443">
+                                    <label class="form-check-label" for="port8443">
+                                        <strong>8443</strong> (Alt HTTPS)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button class="btn btn-success btn-lg" id="confirmUpdateBtn">
+                        <i class="fas fa-save"></i> Update NAT Configuration
+                    </button>
+                    <button class="btn btn-secondary btn-lg ms-2" onclick="closeModal(document.getElementById('quickNATUpdateModal'))">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                </div>
+            `;
+
+            // Show footer
+            modalFooter.style.display = 'none';
+            closeBtn.disabled = false;
+
+            // Open modal
+            openModal(modal);
+
+            // Bind confirm button
+            const confirmBtn = document.getElementById('confirmUpdateBtn');
+            confirmBtn.addEventListener('click', async () => {
+                // Get selected port
+                const selectedPort = document.querySelector('input[name="portSelection"]:checked').value;
+
+                // Show loading state
+                modalContent.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-circle-notch fa-spin fa-3x text-success mb-3"></i>
+                        <p class="mt-3 fw-bold">Updating NAT configuration...</p>
+                        <p class="text-muted">PPPoE: ${username}</p>
+                        <p class="text-muted">Target: ${ipAddress}:${selectedPort}</p>
+                        <p class="text-muted">Please wait...</p>
+                    </div>
+                `;
+
+                // Disable close button during update
+                closeBtn.disabled = true;
+
+                // Perform NAT update
+                try {
+                    const response = await fetch('/api/nat/update', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            router: routerName,
+                            ip: ipAddress,
+                            port: selectedPort
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        // Reload NAT configurations to get updated ONT URL
+                        await loadNATConfigurations();
+
+                        // Get updated config for this router
+                        const routerConfig = natConfigs[routerName];
+                        const ontURL = routerConfig?.public_ont_url || null;
+
+                        // Show success result
+                        modalContent.innerHTML = `
+                            <div class="alert alert-success">
+                                <h5><i class="fas fa-check-circle"></i> NAT Update Berhasil!</h5>
+                                <p class="mb-0">${result.message}</p>
+                            </div>
+
+                            <div class="card border-success mb-3">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-network-wired"></i> NAT Configuration</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-4"><strong>Router:</strong></div>
+                                        <div class="col-8">${routerName}</div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4"><strong>PPPoE Username:</strong></div>
+                                        <div class="col-8"><code>${username}</code></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4"><strong>Target IP:</strong></div>
+                                        <div class="col-8"><code>${ipAddress}</code></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4"><strong>Target Port:</strong></div>
+                                        <div class="col-8"><code>${selectedPort}</code></div>
+                                    </div>
+                                    ${ontURL ? `
+                                        <div class="row">
+                                            <div class="col-4"><strong>Public URL:</strong></div>
+                                            <div class="col-8">
+                                                <a href="${ontURL}" target="_blank" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-external-link-alt"></i> Buka ONT URL
+                                                </a>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div class="alert alert-warning mt-2 mb-0">
+                                            <i class="fas fa-info-circle"></i> Public ONT URL belum dikonfigurasi untuk router ini
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb"></i>
+                                <strong>Tip:</strong> Klik tombol "Buka ONT URL" untuk mengakses ONT secara langsung
+                            </div>
+                        `;
+
+                        showSuccess(`NAT berhasil diupdate untuk ${username} (${routerName}) → ${ipAddress}:${selectedPort}`);
+                    } else {
+                        // Show error result
+                        modalContent.innerHTML = `
+                            <div class="alert alert-danger">
+                                <h5><i class="fas fa-exclamation-triangle"></i> NAT Update Failed</h5>
+                                <p class="mb-0">${result.message || 'Gagal mengupdate NAT rule'}</p>
+                            </div>
+
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Kemungkinan Penyebab</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="mb-0">
+                                        <li>Router tidak dapat diakses (offline/timeout)</li>
+                                        <li>NAT rule tidak ditemukan di router</li>
+                                        <li>Koneksi ke router terputus</li>
+                                        <li>Permissions tidak mencukupi</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn btn-outline-warning" onclick="selectClientForNAT('${routerName}', '${ipAddress}', '${username}')">
+                                    <i class="fas fa-redo"></i> Coba Lagi
+                                </button>
+                            </div>
+                        `;
+
+                        showError(`Gagal mengupdate NAT untuk ${username} (${routerName})`);
+                    }
+                } catch (error) {
+                    console.error('Quick NAT update error:', error);
+
+                    // Show network error
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Network Error</h5>
+                            <p class="mb-0">Terjadi kesalahan jaringan: ${error.message}</p>
+                        </div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-outline-danger" onclick="selectClientForNAT('${routerName}', '${ipAddress}', '${username}')">
+                                <i class="fas fa-redo"></i> Coba Lagi
+                            </button>
+                        </div>
+                    `;
+
+                    showError('Terjadi kesalahan saat mengupdate NAT');
+                } finally {
+                    // Re-enable close button and show footer
+                    closeBtn.disabled = false;
+                    modalFooter.style.display = 'block';
+                }
+            });
+        }
+
+        // Test Single Router Connection
+        async function testRouterConnection(routerName) {
+            const button = event.target.closest('button');
+            const originalHTML = button.innerHTML;
+
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/api/nat/test');
+                if (!response.ok) throw new Error('Failed to test connection');
+
+                const result = await response.json();
+                if (result.status === 'success' && result.data[routerName]) {
+                    const status = result.data[routerName];
+                    const message = status.status === 'connected' ?
+                        'Koneksi berhasil!' :
+                        `Koneksi gagal: ${status.message}`;
+
+                    if (status.status === 'connected') {
+                        showSuccess(`${routerName}: ${message}`);
+                    } else {
+                        showError(`${routerName}: ${message}`);
+                    }
+                }
+            } catch (error) {
+                showError(`Gagal test koneksi ${routerName}`);
+            } finally {
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+            }
+        }
+
+        // View Router Config Modal (stub for future implementation)
+        function viewRouterConfig(routerName) {
+            showSuccess(`Viewing detailed config for ${routerName} - Feature coming soon!`);
+        }
+
+        // Extract WiFi Password from ONT
+        // Launcher akan auto-detect model ONT dan adjust credentials sesuai model:
+        // - ZTE F477V2/F450 → admin/suportadmin
+        // - GM220-S/OLD_MODEL → admin/admin
+        async function extractWiFiPassword(routerName) {
+            console.log(`🔐 Starting WiFi extraction for router: ${routerName}`);
+
+            // IMPORTANT: Buka modal DULU untuk user feedback, baru kemudian validasi
+            const modal = document.getElementById('wifiExtractionModal');
+            const modalTitle = document.getElementById('wifiModalRouterName');
+            const modalContent = document.getElementById('wifiModalContent');
+            const closeBtn = document.getElementById('wifiModalCloseBtn');
+
+            // Update modal title
+            modalTitle.textContent = `${routerName} - WiFi Extraction`;
+
+            // Show initial loading state
+            modalContent.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-circle-notch fa-spin fa-3x text-primary mb-3"></i>
+                    <p class="mt-3 fw-bold">Mempersiapkan extraction...</p>
+                    <p class="text-muted">Mohon tunggu sebentar</p>
+                </div>
+            `;
+
+            // Disable close button during extraction
+            closeBtn.disabled = true;
+
+            // BUKA MODAL LANGSUNG untuk feedback ke user
+            openModal(modal);
+
+            // Get the button to retrieve its stored ONT URL
+            const wifiButton = document.querySelector(`#router-${routerName} .btn-warning`);
+            const ontURL = wifiButton ? wifiButton.getAttribute('data-ont-url') : null;
+
+            // Validate ONT URL exists (SETELAH modal dibuka)
+            if (!ontURL) {
+                modalContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle"></i> ONT URL Tidak Ditemukan</h5>
+                        <p class="mb-0">ONT URL tidak dikonfigurasi untuk router <strong>${routerName}</strong>.</p>
+                    </div>
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-info-circle"></i> Kemungkinan Penyebab:</h6>
+                        <ul class="mb-0">
+                            <li>NAT belum dikonfigurasi untuk router ini</li>
+                            <li>ONT URL kosong di konfigurasi NAT</li>
+                            <li>Data belum ter-load dengan benar</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-secondary" onclick="closeModal(document.getElementById('wifiExtractionModal'))">
+                            <i class="fas fa-times"></i> Tutup
+                        </button>
+                    </div>
+                `;
+                closeBtn.disabled = false;
+                return;
+            }
+
+            console.log(`📡 Using ONT URL from card: ${ontURL}`);
+
+            // Update modal dengan ONT URL info
+            modalContent.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-circle-notch fa-spin fa-3x text-primary mb-3"></i>
+                    <p class="mt-3 fw-bold">Sedang mengekstrak password WiFi...</p>
+                    <p class="text-muted">Proses ini membutuhkan waktu 10-30 detik</p>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        Sistem akan otomatis mendeteksi model ONT dan mengekstrak WiFi credentials
+                        <br><small class="mt-2 d-block">ONT URL: <strong>${ontURL}</strong></small>
+                    </div>
+                </div>
+            `;
+
+            try {
+                // Call API to extract WiFi using direct URL from card
+                const response = await fetch('/api/ont/wifi/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ont_url: ontURL,
+                        username: 'admin',
+                        password: 'admin'
+                    })
+                });
+
+                const result = await response.json();
+
+                // DEBUG: Log the full response
+                console.log('📥 API Response:', JSON.stringify(result, null, 2));
+                console.log('📊 Response data:', result.data);
+
+                if (result.status === 'success' && result.data) {
+                    // Show success result
+                    const data = result.data;
+                    const extractionTime = (result.extraction_time / 1000000000).toFixed(2); // Convert nanoseconds to seconds
+
+                    // DEBUG: Log extracted data
+                    console.log('✅ Extracted WiFi Data:');
+                    console.log('   - SSID:', data.ssid);
+                    console.log('   - Password:', data.password);
+                    console.log('   - Model:', data.ont_model);
+                    console.log('   - Security:', data.security);
+                    console.log('   - Extracted At:', data.extracted_at);
+
+                    modalContent.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle"></i> WiFi Credentials Berhasil Diekstrak!</h5>
+                            <p class="mb-0">Model ONT: <strong>${data.ont_model || 'Unknown'}</strong> | Waktu: ${extractionTime}s</p>
+                        </div>
+
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-wifi"></i> WiFi Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-4"><strong>SSID:</strong></div>
+                                    <div class="col-8">
+                                        <span class="font-monospace">${data.ssid}</span>
+                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('${data.ssid}', 'SSID')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-4"><strong>Password:</strong></div>
+                                    <div class="col-8">
+                                        <span class="font-monospace fw-bold text-primary">${data.password}</span>
+                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('${data.password}', 'Password')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-4"><strong>Security:</strong></div>
+                                    <div class="col-8">${data.security || '-'}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4"><strong>Extracted At:</strong></div>
+                                    <div class="col-8"><small>${new Date(data.extracted_at).toLocaleString('id-ID')}</small></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-lightbulb"></i>
+                            <strong>Tip:</strong> Klik tombol <i class="fas fa-copy"></i> untuk menyalin ke clipboard
+                        </div>
+                    `;
+
+                    showSuccess(`WiFi credentials berhasil diekstrak dari ${routerName}`);
+                } else {
+                    // Show error result
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Extraction Failed</h5>
+                            <p class="mb-0">${result.message || 'Gagal mengekstrak WiFi credentials'}</p>
+                        </div>
+
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning">
+                                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Kemungkinan Penyebab</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="mb-0">
+                                    <li>ONT URL tidak dikonfigurasi untuk router ini</li>
+                                    <li>ONT tidak dapat diakses (offline/maintenance)</li>
+                                    <li>Model ONT tidak didukung</li>
+                                    <li>Credentials ONT tidak valid</li>
+                                    <li>Webautomation tools belum terinstall (npm install di folder webautomation)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-outline-warning" onclick="extractWiFiPassword('${routerName}')">
+                                <i class="fas fa-redo"></i> Coba Lagi
+                            </button>
+                        </div>
+                    `;
+
+                    showError(`Gagal mengekstrak WiFi dari ${routerName}`);
+                }
+            } catch (error) {
+                console.error('WiFi extraction error:', error);
+
+                // Show network error
+                modalContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Network Error</h5>
+                        <p class="mb-0">Terjadi kesalahan jaringan: ${error.message}</p>
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="btn btn-outline-danger" onclick="extractWiFiPassword('${routerName}')">
+                            <i class="fas fa-redo"></i> Coba Lagi
+                        </button>
+                    </div>
+                `;
+
+                showError('Terjadi kesalahan saat mengekstrak WiFi');
+            } finally {
+                // Re-enable close button
+                closeBtn.disabled = false;
+            }
+        }
+
+        // Copy to clipboard helper function
+        function copyToClipboard(text, label) {
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess(`${label} berhasil disalin ke clipboard!`);
+            }).catch(err => {
+                showError(`Gagal menyalin ${label}`);
+                console.error('Copy failed:', err);
+            });
+        }
+
+        function logout() {
+            if (confirm('Yakin ingin logout?')) {
+                // Stop auto refresh saat logout
+                stopAutoRefresh();
+                fetch('/api/auth/logout', { method: 'POST' })
+                    .then(() => window.location.href = '/login');
+            }
+        }
+
+        // Stop auto refresh saat window/tab ditutup atau pindah halaman
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+        });
+    </script>
+{{end}}

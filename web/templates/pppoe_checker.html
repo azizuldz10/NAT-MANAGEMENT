@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>{{.Title}} - PPPoE Status Checker</title>
+    <!-- Bootstrap CSS removed (custom mobile-first CSS is used) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/theme.css" rel="stylesheet">
+    <link href="/static/css/simple-mobile-fix.css" rel="stylesheet">
+    <link href="/static/css/overlay-fix.css" rel="stylesheet">
+    <style>
+        /* Version Badge */
+        .version-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Gradient Backgrounds */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .bg-gradient-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .bg-gradient-secondary {
+            background: linear-gradient(135deg, #a8a8a8 0%, #6a6a6a 100%);
+        }
+
+        /* Card Improvements */
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .card-header {
+            border: none;
+        }
+
+        /* Form Improvements */
+        .form-select-lg, .input-group-lg .form-control {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .form-select-lg:focus, .input-group-lg .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-group-text {
+            border: 2px solid #e2e8f0;
+            border-right: none;
+        }
+
+        .input-group-lg .form-control {
+            border-left: none;
+        }
+
+        /* Button Improvements */
+        .btn-lg {
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(17, 153, 142, 0.3);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .btn-outline-primary:hover {
+            background: #667eea;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Alert Improvements */
+        .alert-light {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+        }
+
+        @media (max-width: 576px) {
+            .version-badge {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+                bottom: 8px;
+                right: 8px;
+            }
+
+            .card-body {
+                padding: 1.5rem !important;
+            }
+
+            .bg-gradient-primary {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+
+            .btn-lg {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Version Badge -->
+    <div class="version-badge">v4.2</div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <a href="/" class="sidebar-brand">
+                <i class="fas fa-network-wired"></i>
+                <span class="sidebar-brand-text">NAT Management</span>
+            </a>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-nav">
+            <!-- Main Navigation -->
+            <div class="nav-group">
+                <div class="nav-group-title">Main Menu</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="nav-link-text">NAT Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link active" href="/pppoe">
+                        <i class="fas fa-search"></i>
+                        <span class="nav-link-text">PPPoE Checker</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/monitoring">
+                        <i class="fas fa-heartbeat"></i>
+                        <span class="nav-link-text">Monitoring</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Admin Navigation -->
+            <div class="nav-group">
+                <div class="nav-group-title">Administration</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/routers" id="routerManagementLink">
+                        <i class="fas fa-server"></i>
+                        <span class="nav-link-text">Router Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/users" id="userManagementLink">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-link-text">User Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/logs" id="activityLogsLink">
+                        <i class="fas fa-history"></i>
+                        <span class="nav-link-text">Activity Logs</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Utilities -->
+            <div class="nav-group">
+                <div class="nav-group-title">Utilities</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="#" onclick="refreshData()">
+                        <i class="fas fa-sync-alt" id="refreshIconSidebar"></i>
+                        <span class="nav-link-text">Refresh Data</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="sidebar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <p class="user-name" id="currentUserSidebar">Loading...</p>
+                    <p class="user-role" id="userRoleSidebar">Loading...</p>
+                </div>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-link-text">Logout</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hamburger Button -->
+    <button class="hamburger-btn" id="hamburgerBtn">
+        <div class="hamburger-icon" id="hamburgerIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Page Header -->
+        <div class="bg-gradient-primary py-4 mb-4 border-bottom shadow-sm">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-12">
+                        <h3 class="mb-0 text-white">
+                            <i class="fas fa-search me-2"></i> PPPoE Status Checker
+                        </h3>
+                        <p class="mb-0 text-white-50 mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Cek status koneksi PPPoE username
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid px-4">
+            <!-- Quick Actions Bar for Mobile -->
+            <div class="quick-actions d-lg-none mb-3">
+                <button class="btn btn-primary btn-sm" onclick="refreshData()">
+                    <i class="fas fa-sync-alt" id="refreshIconMobile"></i> Refresh Data
+                </button>
+            </div>
+
+        <!-- PPPoE Search Form -->
+        <div class="row mb-4">
+            <div class="col-12 col-xl-10 mx-auto">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient-primary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-search me-2"></i> Cek Status PPPoE Username
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                         <form id="pppoeCheckForm">
+                             <div class="row g-3">
+                                 <div class="col-lg-4 col-md-6 col-12">
+                                     <label for="routerSelect" class="form-label fw-bold">
+                                         <i class="fas fa-server me-1"></i> Pilih Router
+                                     </label>
+                                     <select class="form-select form-select-lg" id="routerSelect">
+                                         <option value="">🌐 Semua Router</option>
+                                         <!-- Router options will be populated here -->
+                                     </select>
+                                     <div class="form-text mt-2">
+                                         <i class="fas fa-info-circle text-primary"></i>
+                                         Kosongkan untuk cek di semua router
+                                     </div>
+                                 </div>
+                                 <div class="col-lg-5 col-md-6 col-12">
+                                     <label for="usernameInput" class="form-label fw-bold">
+                                         <i class="fas fa-user me-1"></i> Username PPPoE
+                                     </label>
+                                     <div class="input-group input-group-lg">
+                                         <span class="input-group-text bg-light">
+                                             <i class="fas fa-user text-primary"></i>
+                                         </span>
+                                         <input type="text" class="form-control" id="usernameInput"
+                                                placeholder="Contoh: user12345..." required>
+                                     </div>
+                                     <div class="form-text mt-2" id="searchInfo">
+                                         <i class="fas fa-info-circle text-primary"></i>
+                                         Akan mengecek di semua router yang Anda miliki akses
+                                     </div>
+                                 </div>
+                                <div class="col-lg-3 col-md-12 col-12 d-flex align-items-end">
+                                    <div class="d-grid gap-2 w-100">
+                                        <button type="submit" class="btn btn-success btn-lg" id="checkButton">
+                                            <i class="fas fa-search me-2"></i> Cek Status
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-lg" id="fuzzySearchButton">
+                                            <i class="fas fa-search-plus me-2"></i> Cari Serupa
+                                        </button>
+                                    </div>
+                                </div>
+                             </div>
+                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="row mb-4" id="resultsContainer" style="display: none;">
+            <div class="col-12 col-xl-10 mx-auto">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-alt me-2"></i>
+                            Hasil: <span id="searchedUsername" class="fw-bold"></span>
+                        </h5>
+                        <span class="badge bg-light text-dark fs-6" id="statusBadge">Checking...</span>
+                    </div>
+                    <div class="card-body p-4" id="resultsContent">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fuzzy Search Results -->
+        <div class="row mb-4" id="fuzzyResultsContainer" style="display: none;">
+            <div class="col-12 col-xl-10 mx-auto">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient-warning text-dark d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-search-plus me-2"></i>
+                            Username Serupa: <span id="fuzzySearchTerm" class="fw-bold"></span>
+                        </h5>
+                        <span class="badge bg-dark fs-6" id="fuzzyMatchBadge">0 ditemukan</span>
+                    </div>
+                    <div class="card-body p-4" id="fuzzyResultsContent">
+                        <!-- Fuzzy results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search History -->
+        <div class="row mb-5">
+            <div class="col-12 col-xl-10 mx-auto">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient-secondary text-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i> Riwayat Pencarian
+                        </h5>
+                        <button class="btn btn-light btn-sm" onclick="clearHistory()">
+                            <i class="fas fa-trash me-1"></i> Clear
+                        </button>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="searchHistory">
+                            <p class="text-muted text-center mb-0 py-3">
+                                <i class="fas fa-clock fa-2x mb-2 d-block"></i>
+                                Belum ada riwayat pencarian
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div> <!-- End of main-content -->
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle"></i> Berhasil</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="successMessage">
+                    Operation successful!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="errorMessage">
+                    An error occurred.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/responsive.js"></script>
+    <script>
+        // PPPoE Checker Application
+        let currentUserData = null;
+        let searchHistory = [];
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 PPPoE Status Checker Starting...');
+
+            // Initialize sidebar toggle
+            initializeSidebar();
+
+            initializeApplication();
+            loadSearchHistory();
+        });
+
+        function initializeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.getElementById('mainContent');
+
+            // Toggle sidebar function
+            function toggleSidebar() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    // Desktop: toggle collapsed state
+                    sidebar.classList.toggle('collapsed');
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('collapsed'));
+                } else {
+                    // Mobile: toggle open state
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('active', sidebar.classList.contains('open'));
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('open'));
+
+                    // Prevent body scroll when sidebar is open on mobile
+                    if (sidebar.classList.contains('open')) {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                }
+            }
+
+            // Close sidebar when clicking overlay (mobile only)
+            function closeSidebar() {
+                if (window.innerWidth < 992) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    hamburgerIcon.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            // Event listeners
+            hamburgerBtn.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    // Desktop: reset mobile classes
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Mobile: reset desktop classes
+                    sidebar.classList.remove('collapsed');
+                }
+
+                // Update hamburger icon state
+                hamburgerIcon.classList.toggle('active',
+                    isLargeScreen ? sidebar.classList.contains('collapsed') : sidebar.classList.contains('open')
+                );
+            });
+
+            // Initialize sidebar state based on screen size
+            const isLargeScreen = window.innerWidth >= 992;
+            if (!isLargeScreen) {
+                sidebar.classList.remove('collapsed');
+            }
+        }
+
+        async function initializeApplication() {
+            try {
+                console.log('📋 Loading user authentication...');
+                await loadUserInfo();
+                console.log('📋 Loading available routers...');
+                await loadAvailableRouters();
+                console.log('✅ PPPoE Checker Ready');
+            } catch (error) {
+                console.error('❌ Application initialization failed:', error);
+                showError('Gagal memuat aplikasi: ' + error.message);
+            }
+        }
+
+        // User Authentication & Info (Updated for sidebar)
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error('Failed to load user info');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    currentUserData = result.data;
+
+                    // Update UI with user info (sidebar version)
+                    document.getElementById('currentUserSidebar').textContent = currentUserData.user.full_name;
+                    document.getElementById('userRoleSidebar').textContent = currentUserData.user.role;
+
+                    // Set user avatar initial
+                    const userAvatar = document.getElementById('userAvatar');
+                    if (userAvatar && currentUserData.user.full_name) {
+                        userAvatar.textContent = currentUserData.user.full_name.charAt(0).toUpperCase();
+                    }
+
+                    // Show/hide admin menu based on role
+                    const routerManagementLink = document.getElementById('routerManagementLink');
+                    const userManagementLink = document.getElementById('userManagementLink');
+                    const activityLogsLink = document.getElementById('activityLogsLink');
+                    if (routerManagementLink) {
+                        if (currentUserData.user.role === 'Administrator') {
+                            routerManagementLink.style.display = 'flex';
+                        } else {
+                            routerManagementLink.style.display = 'none';
+                        }
+                    }
+                    if (userManagementLink) {
+                        if (currentUserData.user.role === 'Administrator') {
+                            userManagementLink.style.display = 'flex';
+                        } else {
+                            userManagementLink.style.display = 'none';
+                        }
+                    }
+                    if (activityLogsLink) {
+                        if (currentUserData.user.role === 'Administrator') {
+                            activityLogsLink.style.display = 'flex';
+                        } else {
+                            activityLogsLink.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                showError('Gagal memuat informasi user');
+            }
+        }
+
+        // Load Available Routers
+        async function loadAvailableRouters() {
+            try {
+                const response = await fetch('/api/pppoe/routers');
+                if (!response.ok) {
+                    throw new Error('Failed to load routers');
+                }
+                
+                const result = await response.json();
+                if (result.status === 'success') {
+                    populateRouterSelect(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading routers:', error);
+                // Don't show error for this, just use empty router list
+            }
+        }
+
+        // Populate Router Select Dropdown
+        function populateRouterSelect(routers) {
+            const routerSelect = document.getElementById('routerSelect');
+            
+            // Clear existing options except the first one
+            routerSelect.innerHTML = '<option value="">Semua Router</option>';
+            
+            // Add router options
+            routers.forEach(routerName => {
+                const option = document.createElement('option');
+                option.value = routerName;
+                option.textContent = routerName;
+                routerSelect.appendChild(option);
+            });
+        }
+
+        // PPPoE Check Form Handler
+        document.getElementById('pppoeCheckForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('usernameInput').value.trim();
+            const selectedRouter = document.getElementById('routerSelect').value;
+            
+            if (!username) {
+                showError('Username PPPoE harus diisi');
+                return;
+            }
+
+            await checkPPPoEStatus(username, selectedRouter);
+        });
+
+        // Router Selection Change Handler
+        document.getElementById('routerSelect').addEventListener('change', function() {
+            const selectedRouter = this.value;
+            const searchInfo = document.getElementById('searchInfo');
+            
+            if (selectedRouter) {
+                searchInfo.innerHTML = `
+                    <i class="fas fa-info-circle"></i> 
+                    Akan mengecek di router <strong>${selectedRouter}</strong> saja
+                `;
+            } else {
+                searchInfo.innerHTML = `
+                    <i class="fas fa-info-circle"></i> 
+                    Akan mengecek di semua router yang Anda miliki akses
+                `;
+            }
+        });
+
+        // Fuzzy Search Button Handler
+        document.getElementById('fuzzySearchButton').addEventListener('click', async function() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const selectedRouter = document.getElementById('routerSelect').value;
+            
+            if (!username) {
+                showError('Username PPPoE harus diisi untuk pencarian serupa');
+                return;
+            }
+
+            await performFuzzySearch(username, selectedRouter);
+        });
+
+        // Check PPPoE Status
+        async function checkPPPoEStatus(username, selectedRouter = '') {
+            const checkButton = document.getElementById('checkButton');
+            const originalHTML = checkButton.innerHTML;
+
+            // Set loading state
+            checkButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengecek...';
+            checkButton.disabled = true;
+
+            // Show results container
+            document.getElementById('resultsContainer').style.display = 'block';
+            document.getElementById('searchedUsername').textContent = username;
+            document.getElementById('statusBadge').textContent = 'Checking...';
+            document.getElementById('statusBadge').className = 'badge bg-warning text-dark';
+
+            // Show loading in results with router-specific message
+            const loadingMessage = selectedRouter
+                ? `Mengecek status PPPoE di router ${selectedRouter}...`
+                : 'Mengecek status PPPoE di semua router...';
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Checking...</span>
+                    </div>
+                    <p class="mt-2">${loadingMessage}</p>
+                </div>
+            `;
+
+            try {
+                // Prepare request body
+                const requestBody = {
+                    username: username
+                };
+                if (selectedRouter) {
+                    requestBody.router = selectedRouter;
+                }
+
+                const response = await fetch('/api/pppoe/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    displayPPPoEResults(result, selectedRouter);
+                    addToSearchHistory(username, result, selectedRouter);
+                } else {
+                    showError(result.message || 'Gagal mengecek status PPPoE');
+                    document.getElementById('resultsContainer').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking PPPoE status:', error);
+                showError('Terjadi kesalahan saat mengecek status PPPoE');
+                document.getElementById('resultsContainer').style.display = 'none';
+            } finally {
+                // Reset button
+                checkButton.innerHTML = originalHTML;
+                checkButton.disabled = false;
+            }
+        }
+
+        // Display PPPoE Results
+        function displayPPPoEResults(result, selectedRouter = '') {
+            const statusBadge = document.getElementById('statusBadge');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            // Update status badge
+            if (result.is_online) {
+                statusBadge.textContent = `Online (${result.online_count} router)`;
+                statusBadge.className = 'badge bg-success';
+            } else {
+                statusBadge.textContent = 'Offline';
+                statusBadge.className = 'badge bg-danger';
+            }
+            
+            // Build compact results HTML for mobile
+            let resultsHTML = `
+                <div class="mb-3">
+                    <div class="alert ${result.is_online ? 'alert-success' : 'alert-warning'} py-2">
+                        <i class="fas ${result.is_online ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                        ${result.message}
+                        <small class="d-block text-muted mt-1">${new Date(result.timestamp).toLocaleString('id-ID')}</small>
+                    </div>
+                </div>
+            `;
+            
+            // Add compact router results
+            for (const [routerName, routerResult] of Object.entries(result.data)) {
+                const isOnline = routerResult.is_online;
+                const statusClass = isOnline ? 'text-success' : 'text-muted';
+                const statusIcon = isOnline ? 'fa-check-circle' : 'fa-times-circle';
+                
+                resultsHTML += `
+                    <div class="border rounded p-2 mb-2 ${isOnline ? 'border-success bg-light' : 'border-secondary'}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="${statusClass}">
+                                    <i class="fas ${statusIcon}"></i> ${routerName}
+                                </strong>
+                                ${isOnline ? `<span class="badge bg-success ms-2">ONLINE</span>` : `<span class="badge bg-secondary ms-2">OFFLINE</span>`}
+                            </div>
+                        </div>
+                `;
+                
+                if (isOnline) {
+                    resultsHTML += `
+                        <div class="mt-2 small">
+                            <div class="row g-1">
+                                <div class="col-6"><strong>IP:</strong> <code>${routerResult.ip_address}</code></div>
+                                <div class="col-6"><strong>Uptime:</strong> ${routerResult.uptime}</div>
+                                ${routerResult.caller_id ? `<div class="col-12"><strong>Caller ID:</strong> ${routerResult.caller_id}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                resultsHTML += `</div>`;
+            }
+            resultsContent.innerHTML = resultsHTML;
+        }
+
+        // Perform Fuzzy Search
+        async function performFuzzySearch(username, selectedRouter = '') {
+            const fuzzyButton = document.getElementById('fuzzySearchButton');
+            const originalHTML = fuzzyButton.innerHTML;
+            
+            // Set loading state
+            fuzzyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+            fuzzyButton.disabled = true;
+            
+            // Show fuzzy results container
+            document.getElementById('fuzzyResultsContainer').style.display = 'block';
+            document.getElementById('fuzzySearchTerm').textContent = username;
+            document.getElementById('fuzzyMatchBadge').textContent = 'Mencari...';
+            document.getElementById('fuzzyMatchBadge').className = 'badge bg-warning text-dark';
+            
+            // Show loading in fuzzy results
+            const loadingMessage = selectedRouter 
+                ? `Mencari username serupa di router ${selectedRouter}...`
+                : 'Mencari username serupa di semua router...';
+                
+            document.getElementById('fuzzyResultsContent').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Searching...</span>
+                    </div>
+                    <p class="mt-2">${loadingMessage}</p>
+                </div>
+            `;
+
+            try {
+                // Prepare request body
+                const requestBody = { username: username, limit: 5 };
+                if (selectedRouter) {
+                    requestBody.router = selectedRouter;
+                }
+
+                const response = await fetch('/api/pppoe/fuzzy-search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    displayFuzzyResults(result);
+                } else {
+                    showError(result.message || 'Gagal melakukan pencarian serupa');
+                    document.getElementById('fuzzyResultsContainer').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error performing fuzzy search:', error);
+                showError('Terjadi kesalahan saat mencari username serupa');
+                document.getElementById('fuzzyResultsContainer').style.display = 'none';
+            } finally {
+                // Reset button
+                fuzzyButton.innerHTML = originalHTML;
+                fuzzyButton.disabled = false;
+            }
+        }
+
+        // Display Fuzzy Search Results
+        function displayFuzzyResults(result) {
+            const fuzzyMatchBadge = document.getElementById('fuzzyMatchBadge');
+            const fuzzyResultsContent = document.getElementById('fuzzyResultsContent');
+            
+            // Update match badge
+            if (result.match_count > 0) {
+                fuzzyMatchBadge.textContent = `${result.match_count} ditemukan`;
+                fuzzyMatchBadge.className = 'badge bg-success';
+            } else {
+                fuzzyMatchBadge.textContent = 'Tidak ada yang serupa';
+                fuzzyMatchBadge.className = 'badge bg-secondary';
+            }
+            
+            if (result.match_count === 0) {
+                fuzzyResultsContent.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-search-minus fa-3x mb-3"></i>
+                        <h5>Tidak ditemukan username serupa</h5>
+                        <p>Coba dengan kata kunci yang berbeda atau periksa ejaan username.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Build fuzzy results HTML
+            let fuzzyHTML = `
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6 class="mb-2">
+                                <i class="fas fa-search-plus"></i>
+                                ${result.message}
+                            </h6>
+                            <small>Username serupa yang ditemukan sedang online</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-warning">
+                            <tr>
+                                <th>Username</th>
+                                <th>IP Address</th>
+                                <th>Profile</th>
+                                <th class="d-none d-md-table-cell">Uptime</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            // Add fuzzy match results
+            result.matches.forEach((match, index) => {
+                fuzzyHTML += `
+                    <tr onclick="selectFuzzyMatch('${match.username}', '${match.router}')" 
+                        style="cursor: pointer;" 
+                        title="Klik untuk pilih username ini">
+                        <td data-label="Username">
+                            <strong>${match.username}</strong>
+                            <br><small class="text-muted">[${match.router}]</small>
+                        </td>
+                        <td data-label="IP Address">
+                            <code>${match.ip_address}</code>
+                        </td>
+                        <td data-label="Profile">
+                            <span class="badge bg-info">${match.profile || 'default'}</span>
+                        </td>
+                        <td data-label="Uptime" class="d-none d-md-table-cell">
+                            ${match.uptime}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            fuzzyHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            fuzzyResultsContent.innerHTML = fuzzyHTML;
+        }
+
+        // Select Fuzzy Match for Form
+        function selectFuzzyMatch(username, router) {
+            document.getElementById('usernameInput').value = username;
+            document.getElementById('routerSelect').value = router;
+            
+            // Trigger change event to update search info
+            document.getElementById('routerSelect').dispatchEvent(new Event('change'));
+            
+            // Scroll to form
+            document.getElementById('pppoeCheckForm').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            showSuccess(`Username "${username}" dari router ${router} telah dipilih`);
+        }
+
+        // Check Specific User from Fuzzy Results
+        function checkSpecificUser(username, router) {
+            // Set form values
+            document.getElementById('usernameInput').value = username;
+            document.getElementById('routerSelect').value = router;
+            
+            // Trigger change event
+            document.getElementById('routerSelect').dispatchEvent(new Event('change'));
+            
+            // Perform check
+            checkPPPoEStatus(username, router);
+            
+            // Scroll to results
+            setTimeout(() => {
+                document.getElementById('resultsContainer').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 500);
+        }
+
+        // Search History Management
+        function addToSearchHistory(username, result, selectedRouter = '') {
+            const historyItem = {
+                username: username,
+                result: result.is_online ? 'Online' : 'Offline',
+                onlineCount: result.online_count || 0,
+                router: selectedRouter || 'Semua Router',
+                timestamp: new Date().toISOString()
+            };
+            
+            // Add to beginning of array
+            searchHistory.unshift(historyItem);
+            
+            // Keep only last 10 searches
+            searchHistory = searchHistory.slice(0, 10);
+            
+            // Save to localStorage
+            localStorage.setItem('pppoe_search_history', JSON.stringify(searchHistory));
+            
+            // Update display
+            displaySearchHistory();
+        }
+
+        function loadSearchHistory() {
+            const stored = localStorage.getItem('pppoe_search_history');
+            if (stored) {
+                searchHistory = JSON.parse(stored);
+                displaySearchHistory();
+            }
+        }
+
+        function displaySearchHistory() {
+            const historyContainer = document.getElementById('searchHistory');
+            
+            if (searchHistory.length === 0) {
+                historyContainer.innerHTML = `
+                    <p class="text-muted text-center">
+                        <i class="fas fa-clock"></i> Belum ada riwayat pencarian
+                    </p>
+                `;
+                return;
+            }
+            
+            let historyHTML = '<div class="list-group">';
+            
+            searchHistory.forEach((item, index) => {
+                const statusClass = item.result === 'Online' ? 'text-success' : 'text-danger';
+                const statusIcon = item.result === 'Online' ? 'fa-check-circle' : 'fa-times-circle';
+                const timeAgo = getTimeAgo(item.timestamp);
+                
+                historyHTML += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.username}</strong>
+                            <span class="${statusClass} ms-2">
+                                <i class="fas ${statusIcon}"></i> ${item.result}
+                            </span>
+                            ${item.result === 'Online' && item.onlineCount > 0 ? 
+                                `<span class="badge bg-primary ms-1">${item.onlineCount} router</span>` : ''}
+                            <br>
+                            <small class="text-muted">
+                                Router: <strong>${item.router || 'Semua Router'}</strong> • ${timeAgo}
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="recheckUsername('${item.username}', '${item.router === 'Semua Router' ? '' : item.router || ''}')">
+                            <i class="fas fa-redo"></i> Check Ulang
+                        </button>
+                    </div>
+                `;
+            });
+            
+            historyHTML += '</div>';
+            historyContainer.innerHTML = historyHTML;
+        }
+
+        function clearHistory() {
+            if (confirm('Yakin ingin menghapus semua riwayat pencarian?')) {
+                searchHistory = [];
+                localStorage.removeItem('pppoe_search_history');
+                displaySearchHistory();
+                showSuccess('Riwayat pencarian berhasil dihapus');
+            }
+        }
+
+        function recheckUsername(username, router = '') {
+            document.getElementById('usernameInput').value = username;
+            document.getElementById('routerSelect').value = router;
+            
+            // Trigger change event to update search info
+            document.getElementById('routerSelect').dispatchEvent(new Event('change'));
+            
+            checkPPPoEStatus(username, router);
+        }
+
+        // Utility Functions
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffMs = now - time;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Baru saja';
+            if (diffMins < 60) return `${diffMins} menit yang lalu`;
+            if (diffHours < 24) return `${diffHours} jam yang lalu`;
+            return `${diffDays} hari yang lalu`;
+        }
+
+        function showSuccess(message) {
+            const modal = document.getElementById('successModal');
+            const msg = document.getElementById('successMessage');
+            if (msg) msg.textContent = message;
+            if (modal) {
+                openModal(modal);
+            }
+        }
+        
+        function showError(message) {
+            const modal = document.getElementById('errorModal');
+            const msg = document.getElementById('errorMessage');
+            if (msg) msg.textContent = message;
+            if (modal) {
+                openModal(modal);
+            }
+        }
+
+        function openModal(modalEl) {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.setAttribute('aria-hidden', 'false');
+
+            // Close handlers
+            const closeBtn = modalEl.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => closeModal(modalEl));
+            }
+            const okButtons = modalEl.querySelectorAll('[data-bs-dismiss], .btn');
+            okButtons.forEach(btn => {
+                if (btn.getAttribute('data-bs-dismiss') === 'modal') {
+                    btn.addEventListener('click', () => closeModal(modalEl));
+                }
+            });
+
+            // Escape key
+            function onEsc(e) {
+                if (e.key === 'Escape') {
+                    closeModal(modalEl);
+                }
+            }
+            // Click outside dialog
+            function onOutside(e) {
+                const dialog = modalEl.querySelector('.modal-dialog');
+                if (dialog && !dialog.contains(e.target)) {
+                    closeModal(modalEl);
+                }
+            }
+            modalEl._escHandler = onEsc;
+            modalEl._outsideHandler = onOutside;
+            window.addEventListener('keydown', onEsc);
+            window.addEventListener('click', onOutside, { capture: true });
+        }
+
+        function closeModal(modalEl) {
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            modalEl.setAttribute('aria-hidden', 'true');
+
+            if (modalEl._escHandler) {
+                window.removeEventListener('keydown', modalEl._escHandler);
+                modalEl._escHandler = null;
+            }
+            if (modalEl._outsideHandler) {
+                window.removeEventListener('click', modalEl._outsideHandler, { capture: true });
+                modalEl._outsideHandler = null;
+            }
+        }
+
+        function refreshData() {
+            const refreshIconMobile = document.getElementById('refreshIconMobile');
+            const refreshIconSidebar = document.getElementById('refreshIconSidebar');
+
+            // Add spinning animation to both icons
+            if (refreshIconMobile) refreshIconMobile.classList.add('fa-spin');
+            if (refreshIconSidebar) refreshIconSidebar.classList.add('fa-spin');
+
+            try {
+                // Refresh available routers
+                loadAvailableRouters();
+                showSuccess('Data berhasil direfresh');
+            } catch (error) {
+                showError('Gagal refresh data');
+            } finally {
+                // Remove spinning animation from both icons
+                setTimeout(() => {
+                    if (refreshIconMobile) refreshIconMobile.classList.remove('fa-spin');
+                    if (refreshIconSidebar) refreshIconSidebar.classList.remove('fa-spin');
+                }, 1000);
+            }
+        }
+
+        function logout() {
+            if (confirm('Yakin ingin logout?')) {
+                fetch('/api/auth/logout', { method: 'POST' })
+                    .then(() => window.location.href = '/login');
+            }
+        }
+
+        // Enter key support
+        document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('pppoeCheckForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

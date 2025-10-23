@@ -1,0 +1,199 @@
+# 🔐 NAT Management App - Git Ignore File
+
+# =============================================================================
+# SECURITY FILES - NEVER COMMIT TO GIT
+# =============================================================================
+
+# JWT Keys (CRITICAL - Keep private!)
+private.key
+public.key
+*.pem
+*.key
+
+# Environment Files with Sensitive Data
+.env
+production.env
+config.env
+*.env.local
+*.env.production
+
+# Router Credentials and Passwords
+router-config.json
+credentials.json
+
+# =============================================================================
+# EXECUTABLES & BINARIES
+# =============================================================================
+
+# Go executables
+*.exe
+*.exe~
+nat-management*
+!nat-management-app/
+
+# Binary artifacts
+*.bin
+*.out
+
+# =============================================================================
+# LOGS & TEMPORARY FILES
+# =============================================================================
+
+# Application logs
+*.log
+logs/
+security.log
+audit.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# =============================================================================
+# DEVELOPMENT & DEBUG FILES
+# =============================================================================
+
+# Go development
+vendor/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test-*.ps1
+test-*.sh
+debug-*
+benchmark-*
+
+# Coverage reports
+*.cover
+coverage.html
+
+# =============================================================================
+# OS SPECIFIC FILES
+# =============================================================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# =============================================================================
+# BACKUP & ARCHIVE FILES
+# =============================================================================
+
+# Backup files
+backup/
+backup_*/
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tar.bz2
+
+# =============================================================================
+# DATABASE & CACHE FILES
+# =============================================================================
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+cache/
+*.cache
+
+# Redis dumps
+dump.rdb
+
+# =============================================================================
+# DEPLOYMENT & BUILD ARTIFACTS
+# =============================================================================
+
+# Build output
+build/
+dist/
+target/
+
+# Deployment configs (may contain sensitive info)
+docker-compose.override.yml
+k8s-secrets.yml
+helm-values-prod.yml
+
+# =============================================================================
+# IDE & EDITOR FILES
+# =============================================================================
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# =============================================================================
+# MONITORING & METRICS
+# =============================================================================
+
+# Prometheus metrics
+*.prom
+
+# Grafana
+grafana.db
+
+# =============================================================================
+# NOTES
+# =============================================================================
+
+# Keep this structure organized
+# Add new ignore patterns to appropriate sections
+# Test .gitignore with: git check-ignore -v <file>
+# Use git clean -fdx to remove ignored files

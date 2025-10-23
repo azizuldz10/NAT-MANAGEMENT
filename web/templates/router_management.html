@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Router Management - NAT Management</title>
+    <link href="/static/css/theme.css" rel="stylesheet">
+    <link href="/static/css/overlay-fix.css" rel="stylesheet">
+    <link href="/static/css/simple-mobile-fix.css" rel="stylesheet">
+    <link href="/static/css/toast.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Version Badge */
+        .version-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 576px) {
+            .version-badge {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+                bottom: 8px;
+                right: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Version Badge -->
+    <div class="version-badge">v4.1</div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <a href="/" class="sidebar-brand">
+                <i class="fas fa-network-wired"></i>
+                <span class="sidebar-brand-text">NAT Management</span>
+            </a>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-nav">
+            <!-- Main Navigation -->
+            <div class="nav-group">
+                <div class="nav-group-title">Main Menu</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="nav-link-text">NAT Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/pppoe">
+                        <i class="fas fa-search"></i>
+                        <span class="nav-link-text">PPPoE Checker</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/monitoring">
+                        <i class="fas fa-heartbeat"></i>
+                        <span class="nav-link-text">Monitoring</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Admin Navigation -->
+            <div class="nav-group">
+                <div class="nav-group-title">Administration</div>
+                <div class="nav-item">
+                    <a class="nav-link active" href="/routers" id="routerManagementLink">
+                        <i class="fas fa-server"></i>
+                        <span class="nav-link-text">Router Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/users" id="userManagementLink">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-link-text">User Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/logs" id="activityLogsLink">
+                        <i class="fas fa-history"></i>
+                        <span class="nav-link-text">Activity Logs</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Utilities -->
+            <div class="nav-group">
+                <div class="nav-group-title">Utilities</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="#" onclick="refreshData()">
+                        <i class="fas fa-sync-alt" id="refreshIconSidebar"></i>
+                        <span class="nav-link-text">Refresh Data</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="sidebar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <p class="user-name" id="currentUserSidebar">Loading...</p>
+                    <p class="user-role" id="userRoleSidebar">Loading...</p>
+                </div>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-link-text">Logout</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hamburger Button -->
+    <button class="hamburger-btn" id="hamburgerBtn">
+        <div class="hamburger-icon" id="hamburgerIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h1><i class="fas fa-server"></i> Router Management</h1>
+                        <p class="mb-0">Kelola konfigurasi router secara dinamis</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-primary" onclick="showAddRouterModal()">
+                            <i class="fas fa-plus"></i> Add Router
+                        </button>
+                        <button class="btn btn-outline-primary ms-2" onclick="refreshRouters()">
+                            <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <!-- Statistics Cards -->
+            <div class="row mb-4" id="statsContainer">
+                <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                    <div class="stats-card">
+                        <h4 id="totalRouters">0</h4>
+                        <p><i class="fas fa-server"></i> Total Routers</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                    <div class="stats-card">
+                        <h4 id="activeRouters">0</h4>
+                        <p><i class="fas fa-check-circle"></i> Active Routers</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                    <div class="stats-card">
+                        <h4 id="connectedRouters">0</h4>
+                        <p><i class="fas fa-wifi"></i> Connected</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-6 col-6">
+                    <div class="stats-card">
+                        <h4 id="disabledRouters">0</h4>
+                        <p><i class="fas fa-pause-circle"></i> Disabled</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Router Cards Container -->
+            <div class="row" id="routerCardsContainer">
+                <!-- Loading State -->
+                <div class="col-12 text-center" id="loadingState">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading routers...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Router Modal -->
+    <div class="modal fade" id="routerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="routerModalTitle">
+                        <i class="fas fa-server"></i> Add Router
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="routerForm">
+                        <input type="hidden" id="routerID" value="">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="routerName" class="form-label">Router Name *</label>
+                                    <input type="text" class="form-control" id="routerName" required>
+                                    <div class="form-text">Unique name for the router</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="routerHost" class="form-label">Host/IP Address *</label>
+                                    <input type="text" class="form-control" id="routerHost" required>
+                                    <div class="form-text">IP address or hostname</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="routerPort" class="form-label">Port *</label>
+                                    <input type="number" class="form-control" id="routerPort" required min="1" max="65535">
+                                    <div class="form-text">RouterOS API port (default: 8728)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="routerEnabled" class="form-label">Status</label>
+                                    <select class="form-select" id="routerEnabled">
+                                        <option value="true">Enabled</option>
+                                        <option value="false">Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="routerUsername" class="form-label">Username *</label>
+                                    <input type="text" class="form-control" id="routerUsername" required>
+                                    <div class="form-text">RouterOS username</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="routerPassword" class="form-label">Password *</label>
+                                    <input type="password" class="form-control" id="routerPassword" required>
+                                    <div class="form-text">RouterOS password</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="routerTunnelEndpoint" class="form-label">Tunnel Endpoint *</label>
+                            <input type="text" class="form-control" id="routerTunnelEndpoint" required placeholder="172.22.28.5:80">
+                            <div class="form-text">Internal tunnel endpoint IP:port</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="routerPublicONTURL" class="form-label">Public ONT URL *</label>
+                            <input type="url" class="form-control" id="routerPublicONTURL" required placeholder="http://tunnel3.ebilling.id:19701">
+                            <div class="form-text">Public URL for ONT access</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="routerDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="routerDescription" rows="2" placeholder="Optional description for this router"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" onclick="testRouterConfiguration()">
+                        <i class="fas fa-plug"></i> Test Connection
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRouter()">
+                        <i class="fas fa-save"></i> Save Router
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-trash"></i> Delete Router
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this router?</p>
+                    <div class="alert alert-warning">
+                        <strong>Router:</strong> <span id="deleteRouterName"></span><br>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDeleteRouter()">
+                        <i class="fas fa-trash"></i> Delete Router
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle"></i> Success</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="successMessage">
+                    Operation successful!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="errorMessage">
+                    An error occurred.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/api-utils.js"></script>
+    <script src="/static/js/responsive.js"></script>
+    <script>
+        // Router Management Application
+        let currentUserData = null;
+        let routersData = [];
+        let currentEditingRouter = null;
+        let currentDeletingRouter = null;
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🖥️ Router Management Starting...');
+
+            // Initialize sidebar toggle
+            initializeSidebar();
+
+            initializeApplication();
+        });
+
+        function initializeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    sidebar.classList.toggle('collapsed');
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('collapsed'));
+                } else {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('active', sidebar.classList.contains('open'));
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('open'));
+
+                    if (sidebar.classList.contains('open')) {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                }
+            }
+
+            function closeSidebar() {
+                if (window.innerWidth < 992) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    hamburgerIcon.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            hamburgerBtn.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            window.addEventListener('resize', function() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.remove('collapsed');
+                }
+
+                hamburgerIcon.classList.toggle('active',
+                    isLargeScreen ? sidebar.classList.contains('collapsed') : sidebar.classList.contains('open')
+                );
+            });
+
+            const isLargeScreen = window.innerWidth >= 992;
+            if (!isLargeScreen) {
+                sidebar.classList.remove('collapsed');
+            }
+        }
+
+        async function initializeApplication() {
+            try {
+                console.log('📋 Loading user authentication...');
+                await loadUserInfo();
+
+                console.log('📋 Loading routers data...');
+                await Promise.all([
+                    loadRouters(),
+                    loadRouterStats()
+                ]);
+
+                console.log('✅ Router Management Ready');
+            } catch (error) {
+                console.error('❌ Application initialization failed:', error);
+                showError('Failed to load application: ' + error.message);
+            }
+        }
+
+        // User Authentication & Info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error('Failed to load user info');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    currentUserData = result.data;
+
+                    // Update UI with user info
+                    document.getElementById('currentUserSidebar').textContent = currentUserData.user.full_name;
+                    document.getElementById('userRoleSidebar').textContent = currentUserData.user.role;
+
+                    // Set user avatar initial
+                    const userAvatar = document.getElementById('userAvatar');
+                    if (userAvatar && currentUserData.user.full_name) {
+                        userAvatar.textContent = currentUserData.user.full_name.charAt(0).toUpperCase();
+                    }
+
+                    // Check if user is administrator
+                    if (currentUserData.user.role !== 'Administrator') {
+                        // Redirect non-admin users
+                        window.location.href = '/';
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                showError('Failed to load user information');
+            }
+        }
+
+        // Router Data Management
+        async function loadRouters() {
+            try {
+                const response = await fetch('/api/routers');
+                if (!response.ok) {
+                    throw new Error('Failed to load routers');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    routersData = result.data;
+                    displayRouters(routersData);
+                    console.log(`📋 Loaded ${routersData.length} routers`);
+                } else {
+                    throw new Error(result.message || 'Failed to load routers');
+                }
+            } catch (error) {
+                console.error('Error loading routers:', error);
+                showError('Failed to load routers: ' + error.message);
+                displayRouters([]); // Show empty state
+            }
+        }
+
+        async function loadRouterStats() {
+            try {
+                const response = await fetch('/api/routers/stats');
+                if (!response.ok) {
+                    throw new Error('Failed to load router statistics');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    updateStatsDisplay(result);
+                    console.log('📊 Router statistics loaded');
+                } else {
+                    throw new Error(result.message || 'Failed to load statistics');
+                }
+            } catch (error) {
+                console.error('Error loading router stats:', error);
+                showError('Failed to load router statistics: ' + error.message);
+            }
+        }
+
+        // Display Functions
+        function displayRouters(routers) {
+            const container = document.getElementById('routerCardsContainer');
+            const loadingState = document.getElementById('loadingState');
+
+            // Hide loading state
+            if (loadingState) {
+                loadingState.style.display = 'none';
+            }
+
+            if (!routers || routers.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="card text-center">
+                            <div class="card-body py-5">
+                                <i class="fas fa-server fa-3x text-muted mb-3"></i>
+                                <h4>No Routers Found</h4>
+                                <p class="text-muted">Click "Add Router" to create your first router configuration.</p>
+                                <button class="btn btn-primary" onclick="showAddRouterModal()">
+                                    <i class="fas fa-plus"></i> Add Router
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            routers.forEach(router => {
+                const statusBadge = router.enabled ?
+                    '<span class="badge bg-success">Enabled</span>' :
+                    '<span class="badge bg-secondary">Disabled</span>';
+
+                html += `
+                    <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+                        <div class="card router-card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-server text-primary"></i> ${router.name}
+                                </h5>
+                                ${statusBadge}
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p class="mb-2"><strong>Host:</strong><br><small class="text-muted">${router.host}</small></p>
+                                        <p class="mb-2"><strong>Port:</strong><br><small class="text-muted">${router.port}</small></p>
+                                        <p class="mb-2"><strong>Username:</strong><br><small class="text-muted">${router.username}</small></p>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p class="mb-2"><strong>Tunnel:</strong><br><small class="text-muted">${router.tunnel_endpoint}</small></p>
+                                        <p class="mb-2"><strong>Public URL:</strong><br><small class="text-muted"><a href="${router.public_ont_url}" target="_blank">${router.public_ont_url}</a></small></p>
+                                    </div>
+                                </div>
+                                ${router.description ? `<p class="mb-2"><strong>Description:</strong><br><small class="text-muted">${router.description}</small></p>` : ''}
+                                <div class="text-muted">
+                                    <small>Created: ${new Date(router.created_at).toLocaleDateString()}</small>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-outline-info btn-sm" onclick="testRouter('${router.id}')">
+                                        <i class="fas fa-plug"></i> Test
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editRouter('${router.id}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteRouter('${router.id}', '${router.name}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateStatsDisplay(stats) {
+            document.getElementById('totalRouters').textContent = stats.total_routers || 0;
+            document.getElementById('activeRouters').textContent = stats.active_routers || 0;
+            document.getElementById('disabledRouters').textContent = stats.disabled_routers || 0;
+
+            // Calculate connected routers from connection tests
+            let connectedCount = 0;
+            if (stats.connection_tests) {
+                Object.values(stats.connection_tests).forEach(test => {
+                    if (test.status === 'connected') {
+                        connectedCount++;
+                    }
+                });
+            }
+            document.getElementById('connectedRouters').textContent = connectedCount;
+        }
+
+        // Modal Functions
+        function showAddRouterModal() {
+            currentEditingRouter = null;
+            document.getElementById('routerModalTitle').innerHTML = '<i class="fas fa-server"></i> Add Router';
+            document.getElementById('routerForm').reset();
+            document.getElementById('routerID').value = '';
+            document.getElementById('routerEnabled').value = 'true';
+            document.getElementById('routerPort').value = '8728'; // Default RouterOS API port
+
+            const modal = new bootstrap.Modal(document.getElementById('routerModal'));
+            modal.show();
+        }
+
+        function editRouter(routerID) {
+            const router = routersData.find(r => r.id === routerID);
+            if (!router) {
+                showError('Router not found');
+                return;
+            }
+
+            currentEditingRouter = router;
+            document.getElementById('routerModalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Router';
+
+            // Populate form
+            document.getElementById('routerID').value = router.id;
+            document.getElementById('routerName').value = router.name;
+            document.getElementById('routerHost').value = router.host;
+            document.getElementById('routerPort').value = router.port;
+            document.getElementById('routerUsername').value = router.username;
+            document.getElementById('routerPassword').value = ''; // Don't populate password for security
+            document.getElementById('routerTunnelEndpoint').value = router.tunnel_endpoint;
+            document.getElementById('routerPublicONTURL').value = router.public_ont_url;
+            document.getElementById('routerDescription').value = router.description || '';
+            document.getElementById('routerEnabled').value = router.enabled.toString();
+
+            const modal = new bootstrap.Modal(document.getElementById('routerModal'));
+            modal.show();
+        }
+
+        function deleteRouter(routerID, routerName) {
+            currentDeletingRouter = routerID;
+            document.getElementById('deleteRouterName').textContent = routerName;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        // Router Operations
+        async function saveRouter() {
+            const formData = {
+                name: document.getElementById('routerName').value.trim(),
+                host: document.getElementById('routerHost').value.trim(),
+                port: parseInt(document.getElementById('routerPort').value),
+                username: document.getElementById('routerUsername').value.trim(),
+                password: document.getElementById('routerPassword').value,
+                tunnel_endpoint: document.getElementById('routerTunnelEndpoint').value.trim(),
+                public_ont_url: document.getElementById('routerPublicONTURL').value.trim(),
+                description: document.getElementById('routerDescription').value.trim(),
+                enabled: document.getElementById('routerEnabled').value === 'true'
+            };
+
+            // Basic validation
+            if (!formData.name || !formData.host || !formData.username || !formData.tunnel_endpoint || !formData.public_ont_url) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            if (!formData.password && !currentEditingRouter) {
+                showError('Password is required for new routers');
+                return;
+            }
+
+            if (formData.port < 1 || formData.port > 65535) {
+                showError('Port must be between 1 and 65535');
+                return;
+            }
+
+            try {
+                const routerID = document.getElementById('routerID').value;
+                const isEdit = !!routerID;
+
+                // Don't send empty password for edits
+                if (isEdit && !formData.password) {
+                    delete formData.password;
+                }
+
+                const url = isEdit ? `/api/routers/${routerID}` : '/api/routers';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    showSuccess(result.message || (isEdit ? 'Router updated successfully' : 'Router created successfully'));
+                    bootstrap.Modal.getInstance(document.getElementById('routerModal')).hide();
+                    await loadRouters();
+                    await loadRouterStats();
+                } else {
+                    showError(result.message || 'Failed to save router');
+                }
+            } catch (error) {
+                console.error('Error saving router:', error);
+                showError('Failed to save router: ' + error.message);
+            }
+        }
+
+        async function confirmDeleteRouter() {
+            if (!currentDeletingRouter) {
+                showError('No router selected for deletion');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/routers/${currentDeletingRouter}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    showSuccess('Router deleted successfully');
+                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                    currentDeletingRouter = null;
+                    await loadRouters();
+                    await loadRouterStats();
+                } else {
+                    showError(result.message || 'Failed to delete router');
+                }
+            } catch (error) {
+                console.error('Error deleting router:', error);
+                showError('Failed to delete router: ' + error.message);
+            }
+        }
+
+        async function testRouter(routerID) {
+            if (!routerID) {
+                showError('Router ID is required');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/routers/${routerID}/test`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    const testResult = result.test_result;
+                    if (testResult.status === 'connected') {
+                        showSuccess(`Connection successful!<br>
+                                   Router: ${testResult.router_name || 'Unknown'}<br>
+                                   Version: ${testResult.version || 'Unknown'}<br>
+                                   Board: ${testResult.board || 'Unknown'}`);
+                    } else {
+                        showError(`Connection failed: ${testResult.message}`);
+                    }
+                } else {
+                    showError(result.message || 'Connection test failed');
+                }
+            } catch (error) {
+                console.error('Error testing router:', error);
+                showError('Failed to test router connection: ' + error.message);
+            }
+        }
+
+        async function testRouterConfiguration() {
+            const formData = {
+                name: document.getElementById('routerName').value.trim(),
+                host: document.getElementById('routerHost').value.trim(),
+                port: parseInt(document.getElementById('routerPort').value),
+                username: document.getElementById('routerUsername').value.trim(),
+                password: document.getElementById('routerPassword').value,
+                tunnel_endpoint: document.getElementById('routerTunnelEndpoint').value.trim(),
+                public_ont_url: document.getElementById('routerPublicONTURL').value.trim()
+            };
+
+            // Basic validation
+            if (!formData.name || !formData.host || !formData.username || !formData.password) {
+                showError('Please fill in at least name, host, username and password to test connection');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/routers/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    showSuccess('Router configuration is valid');
+                } else {
+                    let errorMsg = 'Configuration validation failed';
+                    if (result.errors && result.errors.length > 0) {
+                        errorMsg += ':<br>' + result.errors.map(err => `${err.field}: ${err.message}`).join('<br>');
+                    }
+                    showError(errorMsg);
+                }
+            } catch (error) {
+                console.error('Error validating router configuration:', error);
+                showError('Failed to validate router configuration: ' + error.message);
+            }
+        }
+
+        // Utility Functions
+        async function refreshRouters() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            const refreshIconSidebar = document.getElementById('refreshIconSidebar');
+
+            // Start refresh animation
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            if (refreshIconSidebar) refreshIconSidebar.classList.add('fa-spin');
+
+            try {
+                await Promise.all([
+                    loadRouters(),
+                    loadRouterStats()
+                ]);
+                console.log('🔄 Router data refreshed');
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showError('Failed to refresh data: ' + error.message);
+            } finally {
+                // Stop refresh animation
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+                if (refreshIconSidebar) refreshIconSidebar.classList.remove('fa-spin');
+            }
+        }
+
+        function refreshData() {
+            refreshRouters();
+        }
+
+        function showSuccess(message) {
+            Toast.success('Success', message);
+        }
+
+        function showError(message) {
+            Toast.error('Error', message);
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                fetch('/api/auth/logout', {
+                    method: 'POST'
+                }).then(() => {
+                    window.location.href = '/login';
+                }).catch(() => {
+                    window.location.href = '/login';
+                });
+            }
+        }
+
+        // Global error handling
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+        });
+    </script>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+            }
+        }

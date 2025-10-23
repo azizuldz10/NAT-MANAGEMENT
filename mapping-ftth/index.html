@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Management FTTH</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar-nav">
+            <div class="logo">
+                <i class="fas fa-network-wired"></i>
+                <h1>FTTH Management</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="map">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Peta Jaringan</span>
+                </a>
+                
+                <div class="nav-divider">MANAGEMENT</div>
+                
+                <a href="#" class="nav-item" data-page="server">
+                    <i class="fas fa-server"></i>
+                    <span>Server</span>
+                </a>
+                <a href="#" class="nav-item" data-page="olt">
+                    <i class="fas fa-hdd"></i>
+                    <span>OLT</span>
+                </a>
+                <a href="#" class="nav-item" data-page="odc">
+                    <i class="fas fa-box"></i>
+                    <span>ODC</span>
+                </a>
+                <a href="#" class="nav-item" data-page="odp">
+                    <i class="fas fa-inbox"></i>
+                    <span>ODP</span>
+                </a>
+                <a href="#" class="nav-item" data-page="pelanggan">
+                    <i class="fas fa-users"></i>
+                    <span>Pelanggan</span>
+                </a>
+                
+                <div class="nav-divider">UTILITAS</div>
+                
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <p>Overview sistem jaringan FTTH</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card server">
+                        <div class="stat-icon"><i class="fas fa-server"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-server">0</h3>
+                            <p>Server</p>
+                        </div>
+                    </div>
+                    <div class="stat-card olt">
+                        <div class="stat-icon"><i class="fas fa-hdd"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-olt">0</h3>
+                            <p>OLT</p>
+                        </div>
+                    </div>
+                    <div class="stat-card odc">
+                        <div class="stat-icon"><i class="fas fa-box"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-odc">0</h3>
+                            <p>ODC</p>
+                        </div>
+                    </div>
+                    <div class="stat-card odp">
+                        <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-odp">0</h3>
+                            <p>ODP</p>
+                        </div>
+                    </div>
+                    <div class="stat-card pelanggan">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-pelanggan">0</h3>
+                            <p>Pelanggan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Page -->
+            <div class="page" id="page-map">
+                <div class="page-header">
+                    <h2>Peta Jaringan FTTH</h2>
+                    <div class="page-actions">
+                        <input type="text" id="searchCoordinates" class="input-field" placeholder="-6.123456,106.789012">
+                        <button id="searchCoordBtn" class="btn btn-primary"><i class="fas fa-search"></i> Cari</button>
+                    </div>
+                </div>
+                <div id="map" class="map-view"></div>
+            </div>
+
+            <!-- Server Management Page -->
+            <div class="page" id="page-server">
+                <div class="page-header">
+                    <h2>Management Server</h2>
+                    <button class="btn btn-primary" id="addServerBtn"><i class="fas fa-plus"></i> Tambah Server</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Server</th>
+                                <th>Koordinat</th>
+                                <th>Jumlah OLT</th>
+                                <th>Dibuat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serverTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- OLT Management Page -->
+            <div class="page" id="page-olt">
+                <div class="page-header">
+                    <h2>Management OLT</h2>
+                    <button class="btn btn-primary" id="addOltBtn"><i class="fas fa-plus"></i> Tambah OLT</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama OLT</th>
+                                <th>Server Parent</th>
+                                <th>Koordinat</th>
+                                <th>Jumlah ODC</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="oltTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ODC Management Page -->
+            <div class="page" id="page-odc">
+                <div class="page-header">
+                    <h2>Management ODC</h2>
+                    <button class="btn btn-primary" id="addOdcBtn"><i class="fas fa-plus"></i> Tambah ODC</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama ODC</th>
+                                <th>OLT Parent</th>
+                                <th>Koordinat</th>
+                                <th>Jumlah ODP</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="odcTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ODP Management Page -->
+            <div class="page" id="page-odp">
+                <div class="page-header">
+                    <h2>Management ODP</h2>
+                    <button class="btn btn-primary" id="addOdpBtn"><i class="fas fa-plus"></i> Tambah ODP</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama ODP</th>
+                                <th>ODC Parent</th>
+                                <th>Koordinat</th>
+                                <th>Jumlah Pelanggan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="odpTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pelanggan Management Page -->
+            <div class="page" id="page-pelanggan">
+                <div class="page-header">
+                    <h2>Management Pelanggan</h2>
+                    <div class="page-actions">
+                        <button class="btn btn-success" id="downloadTemplateBtn"><i class="fas fa-file-excel"></i> Download Template</button>
+                        <button class="btn btn-primary" id="importExcelBtn"><i class="fas fa-file-upload"></i> Import Excel</button>
+                        <button class="btn btn-primary" id="addPelangganBtn"><i class="fas fa-plus"></i> Tambah Manual</button>
+                    </div>
+                </div>
+                <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Status</th>
+                                <th>ODP Parent</th>
+                                <th>PPPOE</th>
+                                <th>Profile</th>
+                                <th>WhatsApp</th>
+                                <th>Koordinat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pelangganTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page" id="page-settings">
+                <div class="page-header">
+                    <h2>Pengaturan</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="setting-item">
+                        <h3><i class="fas fa-server"></i> Konfigurasi Mikrotik Router</h3>
+                        <p>Atur koneksi ke Mikrotik Router untuk monitoring status pelanggan secara real-time</p>
+                        
+                        <form id="mikrotikConfigForm" style="margin: 20px 0;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group">
+                                    <label>IP Address/Host <span class="required">*</span></label>
+                                    <input type="text" id="mikrotikHost" class="input-field" placeholder="192.168.88.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Port <span class="required">*</span></label>
+                                    <input type="number" id="mikrotikPort" class="input-field" placeholder="8728" value="8728" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Username <span class="required">*</span></label>
+                                    <input type="text" id="mikrotikUser" class="input-field" placeholder="admin" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" id="mikrotikPassword" class="input-field" placeholder="Password">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="button" class="btn btn-primary" id="saveMikrotikConfigBtn">
+                                    <i class="fas fa-save"></i> Simpan Konfigurasi
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="loadMikrotikConfigBtn">
+                                    <i class="fas fa-sync-alt"></i> Load Config
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr style="margin: 20px 0; border: none; border-top: 1px solid #ecf0f1;">
+
+                        <h4 style="margin-bottom: 10px;">Monitoring Status</h4>
+                        <div style="margin: 15px 0;">
+                            <p style="font-size: 13px; color: #7f8c8d;"><strong>Status Koneksi:</strong> <span id="mikrotikStatus">Belum ditest</span></p>
+                            <p style="font-size: 13px; color: #7f8c8d;"><strong>Auto-sync:</strong> Setiap 2 menit</p>
+                            <p style="font-size: 13px; color: #7f8c8d;"><strong>Last Sync:</strong> <span id="lastSyncTime">-</span></p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" id="testMikrotikBtn"><i class="fas fa-plug"></i> Test Koneksi</button>
+                            <button class="btn btn-success" id="syncNowBtn"><i class="fas fa-sync"></i> Sync Sekarang</button>
+                            <button class="btn btn-secondary" id="toggleSyncBtn"><i class="fas fa-pause"></i> Pause Sync</button>
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 12px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #27ae60;">
+                            <p style="font-size: 12px; margin: 0; color: #2c3e50;">
+                                <strong><i class="fas fa-info-circle"></i> Info:</strong> 
+                                Pastikan Mikrotik API sudah enabled: <code>/ip service enable api</code>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <h3><i class="fas fa-download"></i> Export Data</h3>
+                        <p>Download semua data dalam format JSON</p>
+                        <button class="btn btn-success" id="exportBtn"><i class="fas fa-file-download"></i> Export JSON</button>
+                    </div>
+                    <div class="setting-item">
+                        <h3><i class="fas fa-upload"></i> Import Data</h3>
+                        <p>Upload file JSON untuk import data</p>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                        <button class="btn btn-primary" id="importBtn"><i class="fas fa-file-upload"></i> Import JSON</button>
+                    </div>
+                    <div class="setting-item danger">
+                        <h3><i class="fas fa-trash"></i> Hapus Semua Data</h3>
+                        <p>Hapus semua data server, OLT, ODC, ODP, dan pelanggan</p>
+                        <button class="btn btn-danger" id="clearAllBtn"><i class="fas fa-exclamation-triangle"></i> Hapus Semua</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div id="formModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Form</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="nodeForm">
+                        <input type="hidden" id="formNodeId">
+                        <input type="hidden" id="formNodeType">
+                        
+                        <div class="form-group">
+                            <label>Nama <span class="required">*</span></label>
+                            <input type="text" id="formName" class="input-field" required>
+                        </div>
+
+                        <div class="form-group" id="formParentGroup" style="display: none;">
+                            <label id="formParentLabel">Parent <span class="required">*</span></label>
+                            <select id="formParent" class="input-field"></select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Koordinat <span class="required">*</span></label>
+                            <div class="coord-input-group">
+                                <input type="text" id="formCoordinates" class="input-field" placeholder="-6.123456,106.789012" required>
+                                <button type="button" class="btn btn-secondary" id="pickFromMapBtn">
+                                    <i class="fas fa-map-marker-alt"></i> Pilih dari Peta
+                                </button>
+                            </div>
+                            <small style="color: #7f8c8d; font-size: 12px; margin-top: 5px; display: block;">Format: -latitude,longitude (contoh: -6.123456,106.789012)</small>
+                        </div>
+
+                        <div id="pelangganExtraFields" style="display: none;">
+                            <div class="form-group">
+                                <label>PPPOE</label>
+                                <input type="text" id="formPppoe" class="input-field" placeholder="username pppoe">
+                            </div>
+                            <div class="form-group">
+                                <label>Profile</label>
+                                <input type="text" id="formProfile" class="input-field" placeholder="10Mbps, 20Mbps, dll">
+                            </div>
+                            <div class="form-group">
+                                <label>Nomor WhatsApp</label>
+                                <input type="text" id="formWhatsapp" class="input-field" placeholder="628xxx">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="saveNodeBtn">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="js/data-manager-new.js"></script>
+    <script src="js/map-controller.js"></script>
+    <script src="js/page-controller.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

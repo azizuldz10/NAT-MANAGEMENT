@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>User Management - NAT Management</title>
+
+    <!-- Styles -->
+    <link href="/static/css/theme.css" rel="stylesheet">
+    <link href="/static/css/overlay-fix.css" rel="stylesheet">
+    <link href="/static/css/simple-mobile-fix.css" rel="stylesheet">
+    <link href="/static/css/toast.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* User Management Specific Styles */
+        .user-management-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .user-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-table {
+            margin-bottom: 0;
+        }
+
+        .user-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .user-table thead th {
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .user-table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-active {
+            background: #48bb78;
+            color: white;
+        }
+
+        .badge-inactive {
+            background: #f56565;
+            color: white;
+        }
+
+        /* Version Badge */
+        .version-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 576px) {
+            .version-badge {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+                bottom: 8px;
+                right: 8px;
+            }
+        }
+
+        .btn-action {
+            margin: 0 3px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .router-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .router-tag {
+            background: #e6f2ff;
+            color: #0066cc;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .search-box {
+            max-width: 400px;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .router-checkbox-group {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .form-check {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .form-check:hover {
+            background: #e9ecef;
+        }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner-custom {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e0;
+            margin-bottom: 20px;
+        }
+
+        .btn-select-all {
+            margin-bottom: 10px;
+        }
+
+        /* Responsive table for mobile */
+        @media (max-width: 768px) {
+            .user-table thead {
+                display: none;
+            }
+
+            .user-table tbody tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 10px;
+                background: #f8f9fa;
+            }
+
+            .user-table tbody td {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px;
+                border: none;
+            }
+
+            .user-table tbody td:before {
+                content: attr(data-label);
+                font-weight: bold;
+                margin-right: 10px;
+            }
+
+            .btn-action {
+                margin: 5px 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Version Badge -->
+    <div class="version-badge">v4.1</div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <a href="/" class="sidebar-brand">
+                <i class="fas fa-network-wired"></i>
+                <span class="sidebar-brand-text">NAT Management</span>
+            </a>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-nav">
+            <!-- Main Navigation -->
+            <div class="nav-group">
+                <div class="nav-group-title">Main Menu</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="nav-link-text">NAT Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/pppoe">
+                        <i class="fas fa-search"></i>
+                        <span class="nav-link-text">PPPoE Checker</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/monitoring">
+                        <i class="fas fa-heartbeat"></i>
+                        <span class="nav-link-text">Monitoring</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Admin Navigation -->
+            <div class="nav-group" id="adminNavGroup">
+                <div class="nav-group-title">Administration</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/routers" id="routerManagementLink">
+                        <i class="fas fa-server"></i>
+                        <span class="nav-link-text">Router Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link active" href="/users" id="userManagementLink">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-link-text">User Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="/logs" id="activityLogsLink">
+                        <i class="fas fa-history"></i>
+                        <span class="nav-link-text">Activity Logs</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Utilities -->
+            <div class="nav-group">
+                <div class="nav-group-title">Utilities</div>
+                <div class="nav-item">
+                    <a class="nav-link" href="#" onclick="refreshData()">
+                        <i class="fas fa-sync-alt" id="refreshIconSidebar"></i>
+                        <span class="nav-link-text">Refresh Data</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="sidebar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <p class="user-name" id="currentUserSidebar">Loading...</p>
+                    <p class="user-role" id="userRoleSidebar">Loading...</p>
+                </div>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-link-text">Logout</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hamburger Button -->
+    <button class="hamburger-btn" id="hamburgerBtn">
+        <div class="hamburger-icon" id="hamburgerIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-custom"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-12 text-center">
+                        <h1><i class="fas fa-users"></i> User Management</h1>
+                        <p class="mb-0 fs-5">Kelola user dan akses router mereka</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <!-- Header Card -->
+            <div class="user-management-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h2 class="mb-2">
+                            <i class="fas fa-user-cog"></i> Manajemen User
+                        </h2>
+                        <p class="text-muted mb-0">Tambah, edit, dan hapus user beserta akses router mereka</p>
+                    </div>
+                    <div class="d-flex gap-2 mt-3 mt-md-0">
+                        <button class="btn btn-primary" onclick="showAddModal()">
+                            <i class="fas fa-plus-circle"></i> Tambah User
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt" id="refreshIconMain"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Card -->
+            <div class="user-card">
+                <!-- Search Bar -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group search-box">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="searchInput"
+                                   placeholder="Cari username, nama, atau email..." onkeyup="handleSearch()">
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <span class="text-muted" id="userCount">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- User Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover user-table">
+                        <thead>
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="15%">Username</th>
+                                <th width="20%">Full Name</th>
+                                <th width="20%">Email</th>
+                                <th width="15%">Router Access</th>
+                                <th width="10%">Status</th>
+                                <th width="15%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h4>Belum ada user</h4>
+                    <p class="text-muted">Mulai dengan menambahkan user pertama Anda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="fas fa-user-plus"></i> Tambah User Baru
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+
+                        <!-- Basic Info -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-user"></i> Username *</label>
+                                <input type="text" class="form-control" id="username" required
+                                       placeholder="Masukkan username">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-id-card"></i> Nama Lengkap *</label>
+                                <input type="text" class="form-control" id="fullName" required
+                                       placeholder="Masukkan nama lengkap">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-envelope"></i> Email *</label>
+                                <input type="email" class="form-control" id="email" required
+                                       placeholder="user@example.com">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-lock"></i> Password <span id="passwordHint">(min 6 karakter)</span></label>
+                                <input type="password" class="form-control" id="password"
+                                       placeholder="Masukkan password">
+                                <small class="text-muted" id="passwordNote" style="display: none;">
+                                    Kosongkan jika tidak ingin mengubah password
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="isActive" checked>
+                                <label class="form-check-label" for="isActive">
+                                    <i class="fas fa-check-circle text-success"></i> Aktif (user dapat login)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Router Access -->
+                        <hr>
+                        <h6 class="mb-3">
+                            <i class="fas fa-router"></i> Akses Router
+                        </h6>
+
+                        <div class="d-flex gap-2 btn-select-all">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllRouters()">
+                                <i class="fas fa-check-double"></i> Pilih Semua
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllRouters()">
+                                <i class="fas fa-times"></i> Hapus Semua
+                            </button>
+                        </div>
+
+                        <div class="router-checkbox-group" id="routerCheckboxes">
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <span class="ms-2">Loading routers...</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">
+                        <i class="fas fa-save"></i> Simpan User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle"></i> Konfirmasi Hapus
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Apakah Anda yakin ingin menghapus user <strong id="deleteUsername"></strong>?</p>
+                    <p class="text-danger mb-0"><i class="fas fa-exclamation-circle"></i> Tindakan ini tidak dapat dibatalkan.</p>
+                    <input type="hidden" id="deleteUserId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> Hapus User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Details Modal -->
+    <div class="modal fade" id="viewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-circle"></i> Detail User
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewModalBody">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle"></i> Berhasil</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="successMessage">
+                    Operasi berhasil!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="errorMessage">
+                    Terjadi kesalahan.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/api-utils.js"></script>
+    <script src="/static/js/responsive.js"></script>
+    <script>
+        let users = [];
+        let availableRouters = [];
+        let currentEditingUserId = null;
+        let currentUserData = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 User Management Loading...');
+
+            // Initialize sidebar toggle
+            initializeSidebar();
+
+            // Load user info and check admin access
+            loadUserInfo();
+
+            // Load data
+            loadAvailableRouters();
+            loadUsers();
+        });
+
+        function initializeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    sidebar.classList.toggle('collapsed');
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('collapsed'));
+                } else {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('active', sidebar.classList.contains('open'));
+                    hamburgerIcon.classList.toggle('active', sidebar.classList.contains('open'));
+
+                    if (sidebar.classList.contains('open')) {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                }
+            }
+
+            function closeSidebar() {
+                if (window.innerWidth < 992) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    hamburgerIcon.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            hamburgerBtn.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            window.addEventListener('resize', function() {
+                const isLargeScreen = window.innerWidth >= 992;
+
+                if (isLargeScreen) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.remove('collapsed');
+                }
+
+                hamburgerIcon.classList.toggle('active',
+                    isLargeScreen ? sidebar.classList.contains('collapsed') : sidebar.classList.contains('open')
+                );
+            });
+
+            const isLargeScreen = window.innerWidth >= 992;
+            if (!isLargeScreen) {
+                sidebar.classList.remove('collapsed');
+            }
+        }
+
+        // User Authentication & Info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login?redirect=/users';
+                        return;
+                    }
+                    throw new Error('Failed to load user info');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    currentUserData = result.data;
+
+                    // Update UI with user info
+                    document.getElementById('currentUserSidebar').textContent = currentUserData.user.full_name;
+                    document.getElementById('userRoleSidebar').textContent = currentUserData.user.role;
+
+                    // Set user avatar initial
+                    const userAvatar = document.getElementById('userAvatar');
+                    if (userAvatar && currentUserData.user.full_name) {
+                        userAvatar.textContent = currentUserData.user.full_name.charAt(0).toUpperCase();
+                    }
+
+                    // Show/hide admin menu based on role
+                    const adminNavGroup = document.getElementById('adminNavGroup');
+                    const routerManagementLink = document.getElementById('routerManagementLink');
+                    const userManagementLink = document.getElementById('userManagementLink');
+                    const activityLogsLink = document.getElementById('activityLogsLink');
+
+                    if (currentUserData.user.role === 'Administrator') {
+                        if (adminNavGroup) adminNavGroup.style.display = 'block';
+                        if (routerManagementLink) routerManagementLink.parentElement.style.display = 'flex';
+                        if (userManagementLink) userManagementLink.parentElement.style.display = 'flex';
+                        if (activityLogsLink) activityLogsLink.parentElement.style.display = 'flex';
+                    } else {
+                        // Non-admin tidak bisa akses halaman ini
+                        showError('Anda tidak memiliki akses ke halaman ini');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                showError('Gagal memuat informasi user');
+            }
+        }
+
+        // Load available routers
+        async function loadAvailableRouters() {
+            try {
+                const response = await fetch('/api/routers');
+                if (response.ok) {
+                    const data = await response.json();
+                    availableRouters = data.data || [];
+                    renderRouterCheckboxes();
+                } else {
+                    console.error('Failed to load routers');
+                }
+            } catch (error) {
+                console.error('Error loading routers:', error);
+            }
+        }
+
+        // Render router checkboxes
+        function renderRouterCheckboxes() {
+            const container = document.getElementById('routerCheckboxes');
+
+            if (availableRouters.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Tidak ada router tersedia</p>';
+                return;
+            }
+
+            let html = '';
+            availableRouters.forEach(router => {
+                html += `
+                    <div class="form-check">
+                        <input class="form-check-input router-checkbox" type="checkbox"
+                               value="${router.name}" id="router_${router.id}">
+                        <label class="form-check-label" for="router_${router.id}">
+                            <strong><i class="fas fa-server"></i> ${router.name}</strong>
+                            <small class="text-muted d-block">${router.host}:${router.port}</small>
+                        </label>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Select/Deselect all routers
+        function selectAllRouters() {
+            document.querySelectorAll('.router-checkbox').forEach(cb => cb.checked = true);
+        }
+
+        function deselectAllRouters() {
+            document.querySelectorAll('.router-checkbox').forEach(cb => cb.checked = false);
+        }
+
+        // Load users
+        async function loadUsers() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/users?limit=100');
+                if (response.ok) {
+                    const data = await response.json();
+                    users = data.data || [];
+                    renderUsers(users);
+                    document.getElementById('userCount').textContent =
+                        `Total: ${users.length} user${users.length !== 1 ? 's' : ''}`;
+                } else {
+                    console.error('Failed to load users');
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showEmptyState();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render users table
+        function renderUsers(userList) {
+            const tbody = document.getElementById('userTableBody');
+
+            if (!userList || userList.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            tbody.parentElement.parentElement.style.display = 'block';
+
+            let html = '';
+            userList.forEach((user, index) => {
+                const routerCount = user.routers ? user.routers.length : 0;
+                const statusBadge = user.is_active
+                    ? '<span class="badge badge-status badge-active"><i class="fas fa-check-circle"></i> Active</span>'
+                    : '<span class="badge badge-status badge-inactive"><i class="fas fa-times-circle"></i> Inactive</span>';
+
+                html += `
+                    <tr>
+                        <td data-label="#">${index + 1}</td>
+                        <td data-label="Username"><strong><i class="fas fa-user"></i> ${user.username}</strong></td>
+                        <td data-label="Full Name">${user.full_name}</td>
+                        <td data-label="Email"><i class="fas fa-envelope"></i> ${user.email}</td>
+                        <td data-label="Router Access">
+                            <span class="badge bg-primary"><i class="fas fa-router"></i> ${routerCount} router${routerCount !== 1 ? 's' : ''}</span>
+                        </td>
+                        <td data-label="Status">${statusBadge}</td>
+                        <td data-label="Actions">
+                            <button class="btn btn-sm btn-info btn-action" onclick="viewUser(${user.id})"
+                                    title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning btn-action" onclick="editUser(${user.id})"
+                                    title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-action" onclick="deleteUser(${user.id}, '${user.username}')"
+                                    title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('userTableBody').parentElement.parentElement.style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('userCount').textContent = 'Total: 0 users';
+        }
+
+        // Search users
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+
+            if (query === '') {
+                renderUsers(users);
+                return;
+            }
+
+            const filtered = users.filter(user =>
+                user.username.toLowerCase().includes(query) ||
+                user.full_name.toLowerCase().includes(query) ||
+                user.email.toLowerCase().includes(query)
+            );
+
+            renderUsers(filtered);
+        }
+
+        // Show Add Modal
+        function showAddModal() {
+            currentEditingUserId = null;
+            document.getElementById('userId').value = '';
+            document.getElementById('modalTitle').innerHTML =
+                '<i class="fas fa-user-plus"></i> Tambah User Baru';
+            document.getElementById('userForm').reset();
+            document.getElementById('isActive').checked = true;
+            document.getElementById('password').required = true;
+            document.getElementById('passwordHint').textContent = '(min 6 karakter)';
+            document.getElementById('passwordNote').style.display = 'none';
+            document.getElementById('username').disabled = false;
+
+            deselectAllRouters();
+
+            openModal(document.getElementById('userModal'));
+        }
+
+        // View User
+        async function viewUser(userId) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/users/${userId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const user = data.data;
+
+                    let routersList = '';
+                    if (user.routers && user.routers.length > 0) {
+                        routersList = user.routers.map(r =>
+                            `<span class="router-tag"><i class="fas fa-router"></i> ${r}</span>`
+                        ).join(' ');
+                    } else {
+                        routersList = '<span class="text-muted">Tidak ada akses router</span>';
+                    }
+
+                    const statusBadge = user.is_active
+                        ? '<span class="badge badge-active"><i class="fas fa-check-circle"></i> Active</span>'
+                        : '<span class="badge badge-inactive"><i class="fas fa-times-circle"></i> Inactive</span>';
+
+                    document.getElementById('viewModalBody').innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-user"></i> Username:</strong><br>
+                                ${user.username}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-id-card"></i> Nama Lengkap:</strong><br>
+                                ${user.full_name}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-envelope"></i> Email:</strong><br>
+                                ${user.email}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-toggle-on"></i> Status:</strong><br>
+                                ${statusBadge}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <strong><i class="fas fa-router"></i> Akses Router (${user.routers ? user.routers.length : 0}):</strong><br>
+                                <div class="router-tags mt-2">
+                                    ${routersList}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-calendar-plus"></i> Dibuat:</strong><br>
+                                ${new Date(user.created_at).toLocaleString('id-ID')}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong><i class="fas fa-calendar-check"></i> Terakhir Update:</strong><br>
+                                ${new Date(user.updated_at).toLocaleString('id-ID')}
+                            </div>
+                        </div>
+                    `;
+
+                    openModal(document.getElementById('viewModal'));
+                }
+            } catch (error) {
+                console.error('Error viewing user:', error);
+                showError('Gagal memuat detail user');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Edit User
+        async function editUser(userId) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/users/${userId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const user = data.data;
+
+                    currentEditingUserId = userId;
+                    document.getElementById('userId').value = userId;
+                    document.getElementById('modalTitle').innerHTML =
+                        '<i class="fas fa-edit"></i> Edit User';
+                    document.getElementById('username').value = user.username;
+                    document.getElementById('username').disabled = true; // Can't change username
+                    document.getElementById('fullName').value = user.full_name;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('password').value = '';
+                    document.getElementById('password').required = false;
+                    document.getElementById('passwordHint').textContent = '(opsional)';
+                    document.getElementById('passwordNote').style.display = 'block';
+                    document.getElementById('isActive').checked = user.is_active;
+
+                    // Set router checkboxes
+                    deselectAllRouters();
+                    if (user.routers) {
+                        user.routers.forEach(routerName => {
+                            const checkbox = document.querySelector(`.router-checkbox[value="${routerName}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        });
+                    }
+
+                    openModal(document.getElementById('userModal'));
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+                showError('Gagal memuat detail user');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Save User (Create or Update)
+        async function saveUser() {
+            const username = document.getElementById('username').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const isActive = document.getElementById('isActive').checked;
+
+            // Validation
+            if (!username || !fullName || !email) {
+                showError('Mohon isi semua field yang wajib diisi');
+                return;
+            }
+
+            if (!currentEditingUserId && (!password || password.length < 6)) {
+                showError('Password minimal 6 karakter');
+                return;
+            }
+
+            // Get selected routers
+            const selectedRouters = [];
+            document.querySelectorAll('.router-checkbox:checked').forEach(cb => {
+                selectedRouters.push(cb.value);
+            });
+
+            const payload = {
+                username: username,
+                full_name: fullName,
+                email: email,
+                routers: selectedRouters,
+                is_active: isActive
+            };
+
+            // Add password only if provided
+            if (password && password.trim() !== '') {
+                payload.password = password;
+            }
+
+            showLoading(true);
+
+            try {
+                let response;
+                if (currentEditingUserId) {
+                    // Update existing user
+                    response = await fetch(`/api/users/${currentEditingUserId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    // Create new user
+                    response = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showSuccess(data.message || 'User berhasil disimpan');
+                    closeModal(document.getElementById('userModal'));
+                    loadUsers();
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Gagal menyimpan user');
+                }
+            } catch (error) {
+                console.error('Error saving user:', error);
+                showError('Gagal menyimpan user');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Delete User
+        function deleteUser(userId, username) {
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteUsername').textContent = username;
+            openModal(document.getElementById('deleteModal'));
+        }
+
+        // Confirm Delete
+        async function confirmDelete() {
+            const userId = document.getElementById('deleteUserId').value;
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showSuccess(data.message || 'User berhasil dihapus');
+                    closeModal(document.getElementById('deleteModal'));
+                    loadUsers();
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Gagal menghapus user');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showError('Gagal menghapus user');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Refresh Data
+        async function refreshData() {
+            const refreshIcon = document.getElementById('refreshIconMain');
+            const refreshIconSidebar = document.getElementById('refreshIconSidebar');
+
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            if (refreshIconSidebar) refreshIconSidebar.classList.add('fa-spin');
+
+            try {
+                await Promise.all([
+                    loadAvailableRouters(),
+                    loadUsers()
+                ]);
+                showSuccess('Data berhasil direfresh');
+            } catch (error) {
+                showError('Gagal refresh data');
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+                if (refreshIconSidebar) refreshIconSidebar.classList.remove('fa-spin');
+            }
+        }
+
+        // Modal Management
+        function openModal(modalEl) {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.setAttribute('aria-hidden', 'false');
+
+            const closeBtn = modalEl.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => closeModal(modalEl));
+            }
+            const dismissButtons = modalEl.querySelectorAll('[data-bs-dismiss="modal"]');
+            dismissButtons.forEach(btn => {
+                btn.addEventListener('click', () => closeModal(modalEl));
+            });
+        }
+
+        function closeModal(modalEl) {
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            modalEl.setAttribute('aria-hidden', 'true');
+        }
+
+        // Show/Hide Loading
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+
+        // Show Success/Error Messages
+        function showSuccess(message) {
+            Toast.success('Success', message);
+        }
+
+        function showError(message) {
+            Toast.error('Error', message);
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Yakin ingin logout?')) {
+                fetch('/api/auth/logout', { method: 'POST' })
+                    .then(() => window.location.href = '/login');
+            }
+        }
+    </script>
+</body>
+</html>
