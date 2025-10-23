@@ -109,7 +109,7 @@ Jika ada firewall di router, allow API access:
 | **Username** | Username MikroTik | `admin` | ✅ |
 | **Password** | Password router | `password123` | ✅ |
 | **Tunnel Endpoint** | Internal tunnel IP:port | `172.22.28.5:80` | ✅ |
-| **Public ONT URL** | Public URL untuk ONT | `http://tunnel3.ebilling.id:19701` | ✅ |
+| **Public ONT URL** | Public URL untuk ONT | `http://tunnel-example.domain.com:19701` | ✅ |
 | **Description** | Deskripsi router (opsional) | `Router Cabang Jakarta` | ❌ |
 | **Status** | Enabled/Disabled | `Enabled` | ✅ |
 
@@ -145,7 +145,7 @@ Jika ada firewall di router, allow API access:
 6. **Public ONT URL:**
    - URL public yang bisa diakses dari internet
    - Format: `http://domain:port` atau `https://domain:port`
-   - Contoh: `http://tunnel3.ebilling.id:19701`
+   - Contoh: `http://tunnel-example.domain.com:19701`
    - Ini adalah URL yang diakses user untuk remote ONT
 
 #### 2.3 Test Connection
@@ -264,9 +264,9 @@ Untuk setup multi-router (cabang berbeda):
 
 | Router | Lokasi | IP Address | Port | Tunnel Endpoint | Public URL |
 |--------|--------|------------|------|-----------------|------------|
-| JAKARTA-01 | Jakarta | 192.168.1.1 | 8728 | 172.22.28.5:80 | tunnel1.ebilling.id:19701 |
-| BANDUNG-01 | Bandung | 192.168.2.1 | 8728 | 172.22.29.5:80 | tunnel2.ebilling.id:19702 |
-| SURABAYA-01 | Surabaya | 10.10.10.1 | 8728 | 172.22.30.5:80 | tunnel3.ebilling.id:19703 |
+| JAKARTA-01 | Jakarta | 192.168.1.1 | 8728 | 172.22.28.5:80 | tunnel-branch1.yourdomain.com:19701 |
+| BANDUNG-01 | Bandung | 192.168.2.1 | 8728 | 172.22.29.5:80 | tunnel-branch2.yourdomain.com:19702 |
+| SURABAYA-01 | Surabaya | 10.10.10.1 | 8728 | 172.22.30.5:80 | tunnel-branch3.yourdomain.com:19703 |
 
 **2. Add semua router satu per satu:**
 - Ulangi Step 2 untuk setiap router

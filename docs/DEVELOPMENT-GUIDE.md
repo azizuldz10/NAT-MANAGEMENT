@@ -18,7 +18,7 @@
 ### Prerequisites
 
 - **Go**: 1.24.0 or higher
-- **PostgreSQL**: 15+ (or Neon account)
+- **PostgreSQL**: 15+ (or Supabase account)
 - **Git**: For version control
 - **Code Editor**: VS Code (recommended) or any Go-compatible IDE
 - **MikroTik Router**: For testing (or use emulator)
@@ -57,7 +57,7 @@ go mod tidy
 
 ### Step 4: Setup Database
 
-#### Using Neon (Recommended for Development)
+#### Using Supabase (Recommended for Development)
 
 1. Sign up at [neon.tech](https://neon.tech)
 2. Create new project

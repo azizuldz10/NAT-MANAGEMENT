@@ -36,7 +36,7 @@ the connected party did not properly respond after a period of time...
    - Username: admin (atau user dengan API access)
    - Password: password router
    - Tunnel Endpoint: (contoh: 172.22.28.5:80)
-   - Public ONT URL: (contoh: http://tunnel3.ebilling.id:19701)
+   - Public ONT URL: (contoh: http://tunnel-example.yourdomain.com:19701)
 5. Klik "Test Connection" untuk verifikasi
 6. Klik "Save Router" jika test berhasil
 

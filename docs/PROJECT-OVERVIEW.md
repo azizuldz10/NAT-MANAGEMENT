@@ -51,7 +51,7 @@
         │                               │
 ┌───────▼────────┐            ┌─────────▼──────────┐
 │   PostgreSQL   │            │  MikroTik Routers  │
-│   (Neon.tech)  │            │   (RouterOS API)   │
+│   (Supabase.tech)  │            │   (RouterOS API)   │
 │                │            │                    │
 │  - users       │            │  - NAT configs     │
 │  - routers     │            │  - PPPoE sessions  │
@@ -736,7 +736,7 @@ class AuthManager {
                                             │
                                     ┌───────▼────────┐
                                     │  PostgreSQL    │
-                                    │  (Neon)        │
+                                    │  (Supabase)        │
                                     └────────────────┘
 ```
 

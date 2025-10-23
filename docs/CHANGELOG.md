@@ -308,12 +308,12 @@ This release focuses on **connection reliability** and **troubleshooting tools**
 
 ### 🎉 Major Release - Database Migration
 
-Complete rewrite of data layer from JSON files to PostgreSQL (Neon Serverless).
+Complete rewrite of data layer from JSON files to PostgreSQL (Supabase Serverless).
 
 ### ✨ Added
 
 #### Database Layer
-- PostgreSQL database backend (Neon Serverless)
+- PostgreSQL database backend (Supabase Serverless)
 - pgx/v5 driver for connection pooling
 - Database migrations system
 - Transaction support
@@ -574,7 +574,7 @@ Initial release - no breaking changes from previous versions.
    cp config/routers.json config/routers.json.backup
    ```
 
-2. **Setup PostgreSQL database** (Neon or local)
+2. **Setup PostgreSQL database** (Supabase or local)
 
 3. **Update `.env` file** with new required variables
 
