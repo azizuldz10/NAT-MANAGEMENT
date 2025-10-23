@@ -164,7 +164,7 @@ NAT Management Dashboard adalah aplikasi web modern untuk mengelola konfigurasi 
 ### Backend
 - **Language**: Go 1.24.0
 - **Web Framework**: Gin (v1.9.1)
-- **Database**: PostgreSQL 15+ (Neon Serverless)
+- **Database**: PostgreSQL 15+ (Supabase)
 - **Database Driver**: pgx/v5, lib/pq
 - **Authentication**: JWT (golang-jwt/jwt/v5)
 - **Password Hashing**: bcrypt (golang.org/x/crypto)
@@ -179,7 +179,7 @@ NAT Management Dashboard adalah aplikasi web modern untuk mengelola konfigurasi 
 - **Responsive Design** (Mobile-first approach)
 
 ### Infrastructure
-- **Database Hosting**: Neon (Serverless PostgreSQL)
+- **Database Hosting**: Supabase PostgreSQL
 - **Environment Config**: godotenv
 - **Session Management**: UUID-based sessions
 - **Rate Limiting**: golang.org/x/time
@@ -197,7 +197,7 @@ NAT Management Dashboard adalah aplikasi web modern untuk mengelola konfigurasi 
 
 - **OS**: Windows 10/11, Linux, macOS
 - **Go**: Version 1.24.0 or higher
-- **PostgreSQL**: Version 15+ (or Neon Serverless account)
+- **PostgreSQL**: Version 15+ (or Supabase account)
 - **MikroTik Router**: RouterOS v6.0+ dengan API service enabled
 - **Network**: Koneksi ke router via API port (8728 atau 8729)
 
@@ -237,9 +237,9 @@ go mod verify
 
 ### 3. Setup Database
 
-#### Option A: Using Neon Serverless (Recommended)
+#### Option A: Using Supabase (Recommended)
 
-1. Create account di [neon.tech](https://neon.tech)
+1. Create account di [supabase.com](https://supabase.com)
 2. Create new project
 3. Copy connection string
 4. Create `.env` file (lihat Configuration section)
@@ -268,8 +268,8 @@ SERVER_HOST=localhost
 SERVER_PORT=8080
 DEBUG=false
 
-# Database Configuration (Neon Serverless)
-DATABASE_URL=postgresql://user:password@ep-xxx.region.aws.neon.tech/nat_management?sslmode=require
+# Database Configuration (Supabase)
+DATABASE_URL=postgresql://user:password@ep-xxx.region.aws.supabase.com/nat_management?sslmode=require
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
@@ -344,7 +344,7 @@ Add router via Web UI or using Setup Wizard:
    - **Username**: MikroTik user dengan API permission
    - **Password**: Router password
    - **Tunnel Endpoint**: Internal IP:port (e.g., 172.22.28.5:80)
-   - **Public ONT URL**: Public URL (e.g., http://tunnel3.ebilling.id:19701)
+   - **Public ONT URL**: Public URL (e.g., http://tunnel-example.yourdomain.com:19701)
 5. Click **Test Connection**
 6. If success, click **Save Router**
 
@@ -728,8 +728,8 @@ Failed to connect to database
 
 **Solutions:**
 1. Verify DATABASE_URL in `.env`
-2. Check Neon project is running
-3. Verify SSL mode is `require` for Neon
+2. Check Supabase project is running
+3. Verify SSL mode is `require` for Supabase
 4. Check internet connection
 
 #### 4. Port Already in Use
@@ -891,7 +891,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [MikroTik](https://mikrotik.com) - RouterOS platform
 - [Gin](https://gin-gonic.com) - Web framework
-- [Neon](https://neon.tech) - Serverless PostgreSQL
+- [Supabase](https://supabase.com) - PostgreSQL Database Platform
 - [go-routeros](https://github.com/go-routeros/routeros) - RouterOS API client
 - Community contributors
 
