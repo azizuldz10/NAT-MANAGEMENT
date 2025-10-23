@@ -37,7 +37,7 @@ NAT Management Dashboard adalah aplikasi web modern untuk mengelola konfigurasi 
 - ✅ **Advanced Connection Handling** - Retry logic dengan exponential backoff
 - ✅ **Comprehensive Diagnostic Tools** - Built-in troubleshooting utilities
 - ✅ **Modern UI/UX** - Responsive design dengan mobile optimization
-- ✅ **PostgreSQL Backend** - Reliable & scalable database (Neon Serverless)
+- ✅ **PostgreSQL Backend** - Reliable & scalable database (Supabase)
 - ✅ **JWT Authentication** - Secure API access dengan token management
 - ✅ **Activity Logging** - Comprehensive audit trail
 

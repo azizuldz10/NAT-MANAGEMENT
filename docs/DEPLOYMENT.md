@@ -46,7 +46,7 @@
 ### ✅ Infrastructure
 
 - [ ] Production server provisioned
-- [ ] PostgreSQL database ready (or Neon project)
+- [ ] PostgreSQL database ready (or Supabase project)
 - [ ] Domain name configured
 - [ ] Reverse proxy setup (Nginx/Caddy)
 - [ ] Monitoring tools installed
@@ -133,8 +133,8 @@ SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
 DEBUG=false
 
-# Database (Neon Serverless PostgreSQL)
-DATABASE_URL=postgresql://user:password@ep-xxx.region.aws.neon.tech/nat_management?sslmode=require
+# Database (Supabase PostgreSQL)
+DATABASE_URL=postgresql://postgres:password@db.xxxxx.supabase.co:5432/postgres?sslmode=require
 
 # JWT Configuration (GENERATE STRONG SECRETS!)
 JWT_SECRET=<GENERATE-STRONG-RANDOM-32+CHARS-SECRET>
@@ -464,11 +464,13 @@ sudo ufw status
 
 ### 4. Database Security
 
-**For Neon (Serverless):**
-- Use connection pooling
+**For Supabase:**
+- Use connection pooling (PgBouncer built-in)
 - Enable SSL (sslmode=require)
 - Use strong passwords
 - Regularly rotate credentials
+- Configure Row Level Security (RLS) policies
+- Use Supabase dashboard for backups
 
 **For Self-hosted PostgreSQL:**
 ```bash
@@ -716,8 +718,8 @@ Add:
 0 2 * * * /opt/nat-management/scripts/backup-db.sh >> /var/log/nat-backup.log 2>&1
 ```
 
-**For Neon (Serverless):**
-Neon provides automatic backups. Use their API to trigger manual backups if needed.
+**For Supabase (Serverless):**
+Supabase provides automatic backups. Check Supabase dashboard for backup options.
 
 ### 2. Application Backup
 
