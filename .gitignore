@@ -22,6 +22,21 @@ router-config.json
 credentials.json
 
 # =============================================================================
+# PROJECT FOLDERS - NOT FOR UPLOAD
+# =============================================================================
+
+# Screenshots and media (local testing only)
+SS/
+screenshots/
+
+# Web automation scripts (sensitive credentials)
+webautomation/
+
+# Mapping FTTH project (separate project)
+mapping-ftth/
+mapping/
+
+# =============================================================================
 # EXECUTABLES & BINARIES
 # =============================================================================
 
