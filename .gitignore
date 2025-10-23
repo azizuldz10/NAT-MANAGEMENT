@@ -22,6 +22,18 @@ router-config.json
 credentials.json
 
 # =============================================================================
+# DEVELOPMENT TOOLS & IDE CONFIGURATION
+# =============================================================================
+
+# Claude Code settings (local configuration)
+.claude/
+.kilocode/
+
+# Playwright automation (local testing artifacts)
+.playwright-mcp/
+playwright-mcp/
+
+# =============================================================================
 # PROJECT FOLDERS - NOT FOR UPLOAD
 # =============================================================================
 
