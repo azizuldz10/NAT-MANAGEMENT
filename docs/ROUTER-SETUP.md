@@ -159,7 +159,7 @@ Sebelum save, **WAJIB test connection:**
 **✅ Success:**
 ```
 Connection successful!
-Router: RB750-JAKARTA
+Router: ROUTER-EXAMPLE
 Version: 6.49.10
 Board: RB750Gr3
 ```

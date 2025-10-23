@@ -519,7 +519,7 @@ Authorization: Bearer <token>
 {
   "status": "connected",
   "message": "Connection successful",
-  "router_identity": "RB750-JAKARTA",
+  "router_identity": "ROUTER-EXAMPLE",
   "system_info": {
     "version": "6.49.10",
     "board_name": "RB750Gr3",
